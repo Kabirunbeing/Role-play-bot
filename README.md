@@ -1,195 +1,89 @@
-# 🎭 RolePlayForge
+# Role Play Bot
 
-A frontend-only web application for creating and chatting with fictional characters. Build unique personalities, craft compelling backstories, and engage in conversations that reflect each character's traits.
+Full-stack AI character roleplay application with authentication and real-time conversations powered by Groq's Llama 3.3 70B model.
 
-## ✨ Features
+## Tech Stack
 
-- **Character Creation**: Design characters with custom names, personalities, backstories, and avatars
-- **Personality Types**: Choose from 5 distinct personalities:
-  - 😊 **Friendly** - Warm, kind, and supportive
-  - 😏 **Sarcastic** - Witty with a sharp tongue
-  - 🧙 **Wise** - Thoughtful and philosophical
-  - 🌑 **Dark** - Mysterious and brooding
-  - 🌟 **Cheerful** - Bubbly and enthusiastic
-- **Interactive Chat**: Real-time conversations with personality-based responses
-- **Character Management**: View, edit, and delete your characters
-- **Persistent Storage**: Characters and conversations saved in browser local storage
-- **Dark RPG Theme**: Beautiful dark UI with purple accents
+**Frontend**
+- React 19 with Vite 7
+- Tailwind CSS (neon cyberpunk theme)
+- Zustand for state management
+- React Router DOM 6
 
-## 🚀 Quick Start
+**Backend**
+- Supabase (PostgreSQL database)
+- Supabase Auth (email/password authentication)
+- Row Level Security policies
 
-### Prerequisites
-- Node.js (v20.17.0 or higher)
-- npm or yarn
+**AI**
+- Groq Cloud API
+- Llama 3.3 70B Versatile model
+- 30 requests per minute free tier
 
-### Installation
+## Features
 
-1. **Clone or navigate to the project**
-   ```bash
-   cd role-play
-   ```
+- User authentication with signup/login
+- Create custom characters with personalities and backstories
+- Real-time AI chat powered by Groq
+- Secure API key storage in backend
+- Persistent chat history
+- Character management (create, edit, delete)
+- Protected routes for authenticated users
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+## Setup
 
-3. **Start development server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open your browser**
-   ```
-   http://localhost:3000
-   ```
-
-## 🛠️ Tech Stack
-
-- **React 19** - UI framework
-- **Vite 7** - Build tool and dev server
-- **React Router DOM 6** - Client-side routing
-- **Zustand** - Lightweight state management
-- **Tailwind CSS 3** - Utility-first styling
-- **Local Storage** - Persistent data storage
-
-## 📁 Project Structure
-
-```
-role-play/
-├── src/
-│   ├── components/
-│   │   └── Layout.jsx          # Main layout with header/footer
-│   ├── pages/
-│   │   ├── Home.jsx            # Landing page
-│   │   ├── CreateCharacter.jsx # Character creation form
-│   │   ├── CharacterList.jsx   # List of all characters
-│   │   └── Chat.jsx            # Chat interface
-│   ├── store/
-│   │   └── useStore.js         # Zustand store (state management)
-│   ├── App.jsx                 # Main app with routing
-│   ├── main.jsx                # Entry point
-│   └── index.css               # Global styles + Tailwind
-├── public/
-├── index.html
-├── package.json
-├── tailwind.config.js
-└── vite.config.js
+1. Clone the repository
+```bash
+git clone https://github.com/Kabirunbeing/Role-play-bot.git
+cd Role-play-bot
 ```
 
-## 🎮 Usage Guide
-
-### 1. Create a Character
-1. Click "Create Your First Character" on the home page
-2. Select an avatar emoji
-3. Enter a character name
-4. Choose a personality type
-5. Write a compelling backstory (minimum 10 characters)
-6. Click "Create & Start Chatting"
-
-### 2. Chat with Characters
-- Type messages in the input field
-- Characters respond based on their personality
-- Responses simulate typing delay (800-2000ms)
-- All messages are saved automatically
-
-### 3. Manage Characters
-- View all characters in "My Characters" page
-- See message counts and creation dates
-- Delete characters (removes all chat history)
-- Switch between characters anytime
-
-## 🧪 Mock Response System
-
-This is a **frontend-only MVP** with no backend or AI integration. Character responses are:
-- **Hardcoded** templates based on personality type
-- **Randomized** from a pool of preset responses
-- **Personality-aware** - each type has unique response patterns
-
-Example response templates:
-- **Friendly**: "That's really interesting! Tell me more..."
-- **Sarcastic**: "Oh, how fascinating... truly groundbreaking stuff."
-- **Wise**: "In my years of experience, I've learned..."
-- **Dark**: "The shadows whisper secrets you cannot comprehend..."
-- **Cheerful**: "Oh my gosh, that's so exciting! 🌟"
-
-## 🎨 Customization
-
-### Add New Personality Types
-Edit `src/pages/CreateCharacter.jsx`:
-```javascript
-const PERSONALITY_TYPES = [
-  { value: 'custom', label: 'Custom', emoji: '🎭', description: 'Your description' },
-  // ... existing types
-];
+2. Install dependencies
+```bash
+npm install
 ```
 
-Then add responses in `src/store/useStore.js`:
-```javascript
-const responses = {
-  custom: [
-    "Custom response 1",
-    "Custom response 2",
-  ],
-  // ... existing responses
-};
+3. Create `.env` file with your credentials
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_GROQ_API_KEY=your_groq_api_key
 ```
 
-### Modify Theme Colors
-Edit `tailwind.config.js`:
-```javascript
-colors: {
-  'accent-purple': '#8b5cf6', // Change to your color
-  // ... other colors
-}
+4. Set up Supabase database
+```sql
+CREATE TABLE user_api_keys (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users NOT NULL,
+  groq_api_key TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE user_api_keys ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own API keys" ON user_api_keys
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own API keys" ON user_api_keys
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own API keys" ON user_api_keys
+  FOR UPDATE USING (auth.uid() = user_id);
 ```
 
-## 🔧 Available Scripts
+5. Run development server
+```bash
+npm run dev
+```
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint |
+## Scripts
 
-## 📝 Future Enhancements (Post-MVP)
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
 
-- [ ] Backend integration with real AI (OpenAI, Anthropic, etc.)
-- [ ] User authentication
-- [ ] Character images/avatars
-- [ ] Voice chat with text-to-speech
-- [ ] Export/import characters
-- [ ] Share characters with other users
-- [ ] Advanced personality customization
-- [ ] Conversation history search
-- [ ] Multiple conversation threads per character
-- [ ] Character relationships and group chats
+## License
 
-## 🐛 Known Limitations
-
-- **No AI**: Responses are preset templates, not intelligent
-- **Local Storage Only**: Data is browser-specific (not synced)
-- **No Authentication**: Anyone with browser access can see characters
-- **Limited Personalities**: Only 5 preset types
-- **No Backend**: Cannot share or sync across devices
-
-## 📄 License
-
-This is an MVP project for demonstration purposes.
-
-## 🙋 Support
-
-For issues or questions:
-1. Check the browser console for errors
-2. Clear local storage: `localStorage.clear()` in browser console
-3. Refresh the page
-
-## 🎉 Credits
-
-Built with ❤️ as a frontend-only MVP for RolePlayForge.
-
----
-
-**Note**: This is a **mock application** with hardcoded responses. To make it production-ready, you'll need to integrate a backend API with actual AI/LLM capabilities.
+MIT
 
