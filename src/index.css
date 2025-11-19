@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-pure-black text-pure-white font-body antialiased;
+  }
+  
+  * {
+    @apply border-white/10;
+  }
+}
+
+@layer components {
+  /* Primary buttons with vibrant colors */
+  .btn-primary {
+    @apply px-6 py-3 bg-neon-green text-pure-black font-bold rounded-lg 
+           transition-all duration-300 hover:shadow-neon-green hover:scale-105
+           active:scale-95 uppercase text-sm tracking-wide;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 bg-pure-white text-pure-black font-medium rounded-lg 
+           transition-all duration-300 hover:bg-light-gray
+           active:scale-95 uppercase text-sm tracking-wide;
+  }
+  
+  .btn-outline {
+    @apply px-6 py-3 bg-transparent border-2 border-pure-white text-pure-white 
+           font-medium rounded-lg transition-all duration-300 
+           hover:bg-pure-white hover:text-pure-black
+           active:scale-95 uppercase text-sm tracking-wide;
+  }
+  
+  .btn-danger {
+    @apply px-4 py-2 bg-neon-pink text-pure-white font-medium rounded-lg 
+           transition-all duration-300 hover:shadow-neon-pink hover:scale-105
+           active:scale-95 text-sm;
+  }
+  
+  /* Input fields */
+  .input-field {
+    @apply w-full px-4 py-3 bg-dark-gray border border-white/20 rounded-lg 
+           text-pure-white placeholder-white/40 
+           focus:outline-none focus:border-neon-cyan focus:shadow-neon-cyan
+           transition-all duration-300;
+  }
+  
+  /* Cards */
+  .card {
+    @apply bg-dark-gray border border-white/10 rounded-xl p-6
+           transition-all duration-300;
+  }
+  
+  .card-hover {
+    @apply bg-dark-gray border border-white/10 rounded-xl p-6
+           transition-all duration-300 hover:border-neon-green hover:shadow-lg
+           hover:-translate-y-1;
+  }
+  
+  /* Neon text effects */
+  .text-neon-glow {
+    @apply text-neon-green;
+    text-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
+  }
+  
+  /* Loading animations */
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  /* Fade in animation */
+  .fade-in {
+    animation: fadeIn 0.4s ease-in;
+  }
+  
+  /* Slide up animation */
+  .slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  /* Shimmer effect for loading states */
+  .shimmer {
+    background: linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+/* Custom animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
+  }
+  50% {
+    opacity: 0.8;
+    text-shadow: 0 0 20px rgba(0, 255, 65, 1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00ff41;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .btn-primary, .btn-secondary, .btn-outline {
+    @apply text-xs px-4 py-2;
+  }
+  
+  .card {
+    @apply p-4;
+  }
+}
