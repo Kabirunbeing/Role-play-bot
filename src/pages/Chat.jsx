@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import SearchBar from '../components/SearchBar';
 import Avatar from '../components/Avatar';
 import Groq from 'groq-sdk';
-import { getGroqKey } from '../lib/supabase';
+import { supabase, getGroqKey } from '../lib/supabase';
 
 const PERSONALITY_INFO = {
   friendly: { icon: 'F', color: 'bg-neon-green' },
@@ -52,52 +51,56 @@ export default function Chat() {
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
   
-  const characters = useStore((state) => state.characters);
-  const getMessages = useStore((state) => state.getMessages);
-  const searchMessages = useStore((state) => state.searchMessages);
-  const sendMessage = useStore((state) => state.sendMessage);
   const setActiveCharacter = useStore((state) => state.setActiveCharacter);
-  const clearConversation = useStore((state) => state.clearConversation);
-  const deleteMessage = useStore((state) => state.deleteMessage);
-  const editMessage = useStore((state) => state.editMessage);
   
+  const [character, setCharacter] = useState(null);
+  const [allMessages, setAllMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [messageSearch, setMessageSearch] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editText, setEditText] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   
-  const character = characters.find((c) => c.id === characterId);
-  const allMessages = getMessages(characterId);
-  const messages = messageSearch ? searchMessages(characterId, messageSearch) : allMessages;
+  const messages = allMessages;
 
   useEffect(() => {
-    if (character) {
-      setActiveCharacter(characterId);
+    async function loadData() {
+      try {
+        // Load character
+        const { data: charData, error: charError } = await supabase
+          .from('characters')
+          .select('*')
+          .eq('id', characterId)
+          .single();
+
+        if (charError) throw charError;
+        setCharacter(charData);
+        setActiveCharacter(characterId);
+
+        // Load messages
+        const { data: msgData, error: msgError } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .eq('character_id', characterId)
+          .order('created_at', { ascending: true });
+
+        if (msgError) throw msgError;
+        setAllMessages(msgData || []);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        navigate('/characters');
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [character, characterId, setActiveCharacter]);
+
+    loadData();
+  }, [characterId, setActiveCharacter, navigate]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.key === 'f') {
-        e.preventDefault();
-        setShowSearch(!showSearch);
-      }
-      if (e.key === 'Escape' && showSearch) {
-        setShowSearch(false);
-        setMessageSearch('');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showSearch]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -113,20 +116,46 @@ export default function Chat() {
     }
   };
 
-  const handleDeleteMessage = (messageId) => {
+  const handleDeleteMessage = async (messageId) => {
     if (window.confirm('Delete this message?')) {
-      deleteMessage(messageId);
+      try {
+        const { error } = await supabase
+          .from('chat_messages')
+          .delete()
+          .eq('id', messageId);
+
+        if (error) throw error;
+        setAllMessages(prev => prev.filter(msg => msg.id !== messageId));
+      } catch (error) {
+        console.error('Error deleting message:', error);
+      }
     }
   };
 
   const handleStartEdit = (msg) => {
     setEditingMessageId(msg.id);
-    setEditText(msg.text);
+    setEditText(msg.message);
   };
 
-  const handleSaveEdit = () => {
-    if (editText.trim() && editText !== messages.find(m => m.id === editingMessageId)?.text) {
-      editMessage(editingMessageId, editText.trim());
+  const handleSaveEdit = async () => {
+    const currentMsg = messages.find(m => m.id === editingMessageId);
+    if (editText.trim() && editText !== currentMsg?.message) {
+      try {
+        const { error } = await supabase
+          .from('chat_messages')
+          .update({ message: editText.trim(), updated_at: new Date().toISOString() })
+          .eq('id', editingMessageId);
+
+        if (error) throw error;
+        
+        setAllMessages(prev => prev.map(msg => 
+          msg.id === editingMessageId 
+            ? { ...msg, message: editText.trim(), updated_at: new Date().toISOString() }
+            : msg
+        ));
+      } catch (error) {
+        console.error('Error updating message:', error);
+      }
     }
     setEditingMessageId(null);
     setEditText('');
@@ -146,9 +175,29 @@ export default function Chat() {
     setInputMessage('');
     setIsTyping(true);
 
-    // Add user message directly to store
-    const addMessage = useStore.getState().addMessage;
-    addMessage(characterId, message, true);
+    // Save user message to database
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      const { data: userMsg, error: userMsgError } = await supabase
+        .from('chat_messages')
+        .insert([{
+          user_id: userData.user.id,
+          character_id: characterId,
+          message: message,
+          is_user: true
+        }])
+        .select()
+        .single();
+
+      if (userMsgError) throw userMsgError;
+      
+      // Add to local state immediately
+      setAllMessages(prev => [...prev, userMsg]);
+    } catch (error) {
+      console.error('Error saving user message:', error);
+    }
 
     // Prefer frontend key for quick availability checks, fall back to backend
     let apiKey = import.meta.env.VITE_GROQ_API_KEY;
@@ -187,32 +236,81 @@ export default function Chat() {
       
       const aiResponse = chatCompletion.choices[0]?.message?.content || 'Sorry, I could not respond.';
       
-      // Add AI response directly to store
+      // Save AI response to database
       await new Promise(resolve => setTimeout(resolve, 800)); // Typing delay
-      addMessage(characterId, aiResponse, false);
+      
+      const { data: userData } = await supabase.auth.getUser();
+      const { data: aiMsg, error: aiMsgError } = await supabase
+        .from('chat_messages')
+        .insert([{
+          user_id: userData.user.id,
+          character_id: characterId,
+          message: aiResponse,
+          is_user: false
+        }])
+        .select()
+        .single();
+
+      if (aiMsgError) throw aiMsgError;
+      
+      // Add to local state
+      setAllMessages(prev => [...prev, aiMsg]);
       
     } catch (error) {
       console.error('Groq API error:', error);
       
-      // If quota exceeded, use mock response instead of error
-      if (error.message?.includes('quota') || error.message?.includes('429')) {
-        console.log('⚠️ API quota exceeded, using mock response');
-        await sendMessage(message);
-      } else {
-        // Other errors - show error message
-        await new Promise(resolve => setTimeout(resolve, 500));
-        addMessage(characterId, 'I apologize, but I\'m having trouble responding right now. Please try again.', false);
+      // Show error message
+      const { data: userData } = await supabase.auth.getUser();
+      const errorMsg = 'I apologize, but I\'m having trouble responding right now. Please try again.';
+      
+      const { data: errMsg } = await supabase
+        .from('chat_messages')
+        .insert([{
+          user_id: userData.user.id,
+          character_id: characterId,
+          message: errorMsg,
+          is_user: false
+        }])
+        .select()
+        .single();
+
+      if (errMsg) {
+        setAllMessages(prev => [...prev, errMsg]);
       }
     }
 
     setIsTyping(false);
   };
 
-  const handleClearChat = () => {
+  const handleClearChat = async () => {
     if (window.confirm('Clear all messages with this character?')) {
-      clearConversation(characterId);
+      try {
+        const { error } = await supabase
+          .from('chat_messages')
+          .delete()
+          .eq('character_id', characterId);
+
+        if (error) throw error;
+        setAllMessages([]);
+      } catch (error) {
+        console.error('Error clearing chat:', error);
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <svg className="animate-spin h-12 w-12 mx-auto mb-4 text-neon-green" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <p className="text-white/60">Loading character...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!character) {
     return (
@@ -244,50 +342,35 @@ export default function Chat() {
           </div>
         </div>
         
-        <div className="flex space-x-2 w-full sm:w-auto">
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className="btn-secondary text-xs sm:text-sm py-2 px-3 sm:px-6 flex-1 sm:flex-none"
-            title="Search messages (Ctrl+F)"
-          >
-            Search
-          </button>
+        <div className="flex gap-2 w-full sm:w-auto">
           <Link
             to={`/edit/${characterId}`}
-            className="btn-secondary text-xs sm:text-sm py-2 px-3 sm:px-6 flex-1 sm:flex-none"
+            className="btn-icon"
             title="Edit character"
           >
-            Edit
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
           </Link>
           {messages.length > 0 && (
             <button
               onClick={handleClearChat}
-              className="btn-secondary text-xs sm:text-sm py-2 px-3 sm:px-6 flex-1 sm:flex-none"
+              className="btn-danger text-sm px-3"
             >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
               Clear
             </button>
           )}
-          <Link to="/characters" className="btn-outline text-xs sm:text-sm py-2 px-3 sm:px-6 flex-1 sm:flex-none">
+          <Link to="/characters" className="btn-outline text-sm px-4">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
             Back
           </Link>
         </div>
       </div>
-
-      {/* Search Bar */}
-      {showSearch && (
-        <div className="mb-4 slide-up">
-          <SearchBar
-            value={messageSearch}
-            onChange={setMessageSearch}
-            placeholder="Search messages... (Esc to close)"
-          />
-          {messageSearch && (
-            <p className="text-xs text-white/60 mt-2 font-mono">
-              Found {messages.length} of {allMessages.length} messages
-            </p>
-          )}
-        </div>
-      )}
 
       {/* Character Info */}
       <div className="card mb-4 bg-off-black border-white/20 p-4">
@@ -300,22 +383,14 @@ export default function Chat() {
           <div className="text-center py-12 sm:py-20">
             <Avatar character={character} size="xl" className="mx-auto mb-6" />
             <h3 className="text-xl sm:text-2xl font-bold text-pure-white mb-3">
-              {allMessages.length > 0 ? 'No messages match your search' : `Start a Conversation with ${character.name}`}
+              Start a Conversation with {character.name}
             </h3>
             <p className="text-white/60 text-sm sm:text-lg mb-6">
-              {allMessages.length > 0 ? 'Try different keywords' : 'Try these conversation starters:'}
+              Try these conversation starters:
             </p>
-            {allMessages.length > 0 && messageSearch && (
-              <button
-                onClick={() => setMessageSearch('')}
-                className="btn-outline text-sm mt-4"
-              >
-                Clear Search
-              </button>
-            )}
             
             {/* Conversation Starters */}
-            {allMessages.length === 0 && !messageSearch && (
+            {allMessages.length === 0 && (
               <div className="max-w-lg mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
                 {CONVERSATION_STARTERS[character.personality.toLowerCase()]?.map((starter, index) => (
                   <button
@@ -337,16 +412,16 @@ export default function Chat() {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'} fade-in group`}
+                className={`flex ${msg.is_user ? 'justify-end' : 'justify-start'} fade-in group`}
               >
                 <div
                   className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-4 sm:px-5 py-3 sm:py-4 relative ${
-                    msg.isUser
+                    msg.is_user
                       ? 'bg-neon-green text-pure-black font-medium'
                       : 'bg-dark-gray text-pure-white border border-white/20'
                   }`}
                 >
-                  {!msg.isUser && (
+                  {!msg.is_user && (
                     <div className="flex items-center space-x-2 mb-2">
                       <Avatar character={character} size="xs" />
                       <span className="text-xs font-bold text-white/60 uppercase tracking-wider">{character.name}</span>
@@ -380,11 +455,11 @@ export default function Chat() {
                     </div>
                   ) : (
                     <>
-                      <p className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed break-words">{msg.text}</p>
+                      <p className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed break-words">{msg.message}</p>
                       <div className="flex items-center justify-between mt-2">
-                        <p className={`text-xs font-mono ${msg.isUser ? 'text-pure-black/60' : 'text-white/40'}`}>
-                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          {msg.edited && <span className="ml-2 italic">(edited)</span>}
+                        <p className={`text-xs font-mono ${msg.is_user ? 'text-pure-black/60' : 'text-white/40'}`}>
+                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {msg.updated_at !== msg.created_at && <span className="ml-2 italic">(edited)</span>}
                         </p>
                       </div>
                     </>
@@ -392,10 +467,10 @@ export default function Chat() {
 
                   {/* Message Actions - Only show when not editing */}
                   {editingMessageId !== msg.id && (
-                    <div className={`absolute ${msg.isUser ? '-left-2 top-1/2 -translate-x-full -translate-y-1/2' : '-right-2 top-1/2 translate-x-full -translate-y-1/2'} opacity-0 group-hover:opacity-100 transition-opacity flex ${msg.isUser ? 'flex-row-reverse' : 'flex-row'} gap-1`}>
+                    <div className={`absolute ${msg.is_user ? '-left-2 top-1/2 -translate-x-full -translate-y-1/2' : '-right-2 top-1/2 translate-x-full -translate-y-1/2'} opacity-0 group-hover:opacity-100 transition-opacity flex ${msg.is_user ? 'flex-row-reverse' : 'flex-row'} gap-1`}>
                       {/* Copy Button */}
                       <button
-                        onClick={() => handleCopyMessage(msg.text, msg.id)}
+                        onClick={() => handleCopyMessage(msg.message, msg.id)}
                         className="p-1.5 bg-dark-gray border border-white/20 rounded-md hover:border-neon-cyan hover:bg-neon-cyan/10 transition-all"
                         title="Copy message"
                       >
@@ -411,7 +486,7 @@ export default function Chat() {
                       </button>
 
                       {/* Edit Button - Only for user messages */}
-                      {msg.isUser && (
+                      {msg.is_user && (
                         <button
                           onClick={() => handleStartEdit(msg)}
                           className="p-1.5 bg-dark-gray border border-white/20 rounded-md hover:border-neon-yellow hover:bg-neon-yellow/10 transition-all"
@@ -475,9 +550,23 @@ export default function Chat() {
           <button
             type="submit"
             disabled={!inputMessage.trim() || isTyping}
-            className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap px-4 sm:px-6"
+            className="btn-primary"
           >
-            Send →
+            {isTyping ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              </>
+            ) : (
+              <>
+                <span>Send</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </>
+            )}
           </button>
         </div>
       </form>

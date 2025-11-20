@@ -17,28 +17,38 @@
 @layer components {
   /* Primary buttons with vibrant colors */
   .btn-primary {
-    @apply px-6 py-3 bg-neon-green text-pure-black font-bold rounded-lg 
-           transition-all duration-300 hover:shadow-neon-green hover:scale-105
-           active:scale-95 uppercase text-sm tracking-wide;
+    @apply px-5 py-2.5 bg-neon-green text-pure-black font-semibold rounded-lg 
+           transition-all duration-200 hover:bg-neon-green/90 hover:shadow-lg hover:shadow-neon-green/30
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
+           flex items-center justify-center gap-2;
   }
   
   .btn-secondary {
-    @apply px-6 py-3 bg-pure-white text-pure-black font-medium rounded-lg 
-           transition-all duration-300 hover:bg-light-gray
-           active:scale-95 uppercase text-sm tracking-wide;
+    @apply px-5 py-2.5 bg-dark-gray text-pure-white font-medium rounded-lg border border-white/20
+           transition-all duration-200 hover:bg-white/5 hover:border-white/30
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
+           flex items-center justify-center gap-2;
   }
   
   .btn-outline {
-    @apply px-6 py-3 bg-transparent border-2 border-pure-white text-pure-white 
-           font-medium rounded-lg transition-all duration-300 
-           hover:bg-pure-white hover:text-pure-black
-           active:scale-95 uppercase text-sm tracking-wide;
+    @apply px-5 py-2.5 bg-transparent border-2 border-white/30 text-pure-white 
+           font-medium rounded-lg transition-all duration-200 
+           hover:bg-white/5 hover:border-white/50
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
+           flex items-center justify-center gap-2;
   }
   
   .btn-danger {
-    @apply px-4 py-2 bg-neon-pink text-pure-white font-medium rounded-lg 
-           transition-all duration-300 hover:shadow-neon-pink hover:scale-105
-           active:scale-95 text-sm;
+    @apply px-4 py-2 bg-transparent border border-red-500/30 text-red-400 font-medium rounded-lg 
+           transition-all duration-200 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-300
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
+           flex items-center justify-center gap-1.5;
+  }
+  
+  .btn-icon {
+    @apply p-2 bg-dark-gray text-white/70 rounded-lg border border-white/10
+           transition-all duration-200 hover:bg-white/5 hover:border-white/20 hover:text-white
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   
   /* Input fields */

@@ -11,7 +11,6 @@ import CharacterList from './pages/CharacterList';
 import Chat from './pages/Chat';
 import Settings from './pages/Settings';
 import CharacterProfile from './pages/CharacterProfile';
-import Search from './pages/Search';
 
 function App() {
   return (
@@ -51,11 +50,6 @@ function App() {
           <Route path="/chat/:characterId" element={
             <ProtectedRoute>
               <Layout><Chat /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/search" element={
-            <ProtectedRoute>
-              <Layout><Search /></Layout>
             </ProtectedRoute>
           } />
           <Route path="/settings" element={

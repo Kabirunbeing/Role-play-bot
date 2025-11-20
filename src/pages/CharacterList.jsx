@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import SearchBar from '../components/SearchBar';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
@@ -14,30 +16,69 @@ const PERSONALITY_INFO = {
 };
 
 export default function CharacterList() {
-  const characters = useStore((state) => state.characters);
-  const getFilteredCharacters = useStore((state) => state.getFilteredCharacters);
-  const deleteCharacter = useStore((state) => state.deleteCharacter);
-  const toggleFavorite = useStore((state) => state.toggleFavorite);
-  const setActiveCharacter = useStore((state) => state.setActiveCharacter);
+  const { user } = useAuth();
   const getMessages = useStore((state) => state.getMessages);
-  const searchQuery = useStore((state) => state.searchQuery);
-  const setSearchQuery = useStore((state) => state.setSearchQuery);
-  const filterPersonality = useStore((state) => state.filterPersonality);
-  const setFilterPersonality = useStore((state) => state.setFilterPersonality);
-  const sortBy = useStore((state) => state.sortBy);
-  const setSortBy = useStore((state) => state.setSortBy);
   const exportData = useStore((state) => state.exportData);
   const importData = useStore((state) => state.importData);
 
+  const [characters, setCharacters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterPersonality, setFilterPersonality] = useState('all');
+  const [sortBy, setSortBy] = useState('recent');
   const [showExportModal, setShowExportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importText, setImportText] = useState('');
 
-  const filteredCharacters = getFilteredCharacters();
+  useEffect(() => {
+    loadCharacters();
+  }, [user]);
 
-  const handleDelete = (id, name) => {
+  const loadCharacters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('characters')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setCharacters(data || []);
+    } catch (error) {
+      console.error('Error loading characters:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredCharacters = characters.filter(char => {
+    const matchesSearch = char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         char.backstory.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesPersonality = filterPersonality === 'all' || char.personality === filterPersonality;
+    return matchesSearch && matchesPersonality;
+  }).sort((a, b) => {
+    if (sortBy === 'recent') {
+      return new Date(b.created_at) - new Date(a.created_at);
+    } else if (sortBy === 'name') {
+      return a.name.localeCompare(b.name);
+    }
+    return 0;
+  });
+
+  const handleDelete = async (id, name) => {
     if (window.confirm(`Are you sure you want to delete "${name}"? This will also delete all chat history.`)) {
-      deleteCharacter(id);
+      try {
+        const { error } = await supabase
+          .from('characters')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        loadCharacters();
+      } catch (error) {
+        console.error('Error deleting character:', error);
+        alert('Failed to delete character');
+      }
     }
   };
 
@@ -68,6 +109,20 @@ export default function CharacterList() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <svg className="animate-spin h-12 w-12 mx-auto mb-4 text-neon-green" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <p className="text-white/60">Loading characters...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (characters.length === 0) {
     return (
       <div className="text-center py-20 fade-in">
@@ -93,9 +148,12 @@ export default function CharacterList() {
             {filteredCharacters.length} {filteredCharacters.length !== characters.length && `of ${characters.length}`} character{filteredCharacters.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Link to="/create" className="btn-primary flex-1 sm:flex-none whitespace-nowrap">
-            + New Character
+        <div className="flex gap-3 w-full sm:w-auto">
+          <Link to="/create" className="btn-primary flex-1 sm:flex-none">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Create Character</span>
           </Link>
         </div>
       </div>
@@ -139,10 +197,8 @@ export default function CharacterList() {
               onChange={(e) => setSortBy(e.target.value)}
               className="w-full px-4 py-3 bg-dark-gray border border-white/20 rounded-lg text-pure-white focus:outline-none focus:border-neon-cyan focus:shadow-neon-cyan transition-all duration-300 appearance-none cursor-pointer"
             >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
+              <option value="recent">Newest First</option>
               <option value="name">Name (A-Z)</option>
-              <option value="mostChats">Most Chats</option>
               <option value="favorites">Favorites First</option>
             </select>
             <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -157,15 +213,21 @@ export default function CharacterList() {
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setShowExportModal(true)}
-            className="px-4 py-2 bg-dark-gray border border-white/20 text-white/80 rounded-lg hover:border-neon-green hover:text-neon-green transition-all text-sm"
+            className="btn-secondary text-sm"
           >
-            Export Data
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export
           </button>
           <button
             onClick={() => setShowImportModal(true)}
-            className="px-4 py-2 bg-dark-gray border border-white/20 text-white/80 rounded-lg hover:border-neon-cyan hover:text-neon-cyan transition-all text-sm"
+            className="btn-secondary text-sm"
           >
-            Import Data
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            Import
           </button>
         </div>
       </div>
@@ -218,24 +280,6 @@ export default function CharacterList() {
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Favorite Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(character.id);
-                    }}
-                    className={`flex-shrink-0 p-2 rounded-lg transition-all duration-300 ${
-                      character.isFavorite 
-                        ? 'bg-neon-yellow/20 text-neon-yellow border border-neon-yellow' 
-                        : 'bg-dark-gray text-white/40 border border-white/10 hover:border-neon-yellow hover:text-neon-yellow'
-                    }`}
-                    title={character.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                  >
-                    <svg className="w-5 h-5" fill={character.isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                    </svg>
-                  </button>
                 </div>
 
                 {/* Backstory Preview */}
@@ -260,27 +304,33 @@ export default function CharacterList() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex space-x-2">
+                <div className="flex gap-2">
                   <Link
                     to={`/chat/${character.id}`}
-                    onClick={() => setActiveCharacter(character.id)}
-                    className="flex-1 btn-primary text-center text-xs sm:text-sm py-2"
+                    className="flex-1 btn-primary text-sm py-2.5"
                   >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
                     Chat
                   </Link>
                   <Link
                     to={`/edit/${character.id}`}
-                    className="btn-secondary text-xs sm:text-sm px-3 sm:px-4"
+                    className="btn-icon"
                     title="Edit character"
                   >
-                    Edit
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
                   </Link>
                   <button
                     onClick={() => handleDelete(character.id, character.name)}
-                    className="btn-danger text-xs sm:text-sm px-3 sm:px-4"
+                    className="btn-danger text-sm px-3"
                     title="Delete character"
                   >
-                    Delete
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                   </button>
                 </div>
               </div>
