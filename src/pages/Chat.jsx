@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import Avatar from '../components/Avatar';
+import Modal from '../components/Modal';
 import Groq from 'groq-sdk';
 import { supabase, getGroqKey } from '../lib/supabase';
 
@@ -48,6 +49,8 @@ const CONVERSATION_STARTERS = {
 
 export default function Chat() {
   const { characterId } = useParams();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState(null);
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
   
@@ -116,19 +119,27 @@ export default function Chat() {
     }
   };
 
-  const handleDeleteMessage = async (messageId) => {
-    if (window.confirm('Delete this message?')) {
-      try {
-        const { error } = await supabase
-          .from('chat_messages')
-          .delete()
-          .eq('id', messageId);
+  const handleDeleteMessage = (messageId) => {
+    setMessageToDelete(messageId);
+    setDeleteModalOpen(true);
+  };
 
-        if (error) throw error;
-        setAllMessages(prev => prev.filter(msg => msg.id !== messageId));
-      } catch (error) {
-        console.error('Error deleting message:', error);
-      }
+  const confirmDeleteMessage = async () => {
+    if (!messageToDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from('chat_messages')
+        .delete()
+        .eq('id', messageToDelete);
+
+      if (error) throw error;
+      setAllMessages(prev => prev.filter(msg => msg.id !== messageToDelete));
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    } finally {
+      setDeleteModalOpen(false);
+      setMessageToDelete(null);
     }
   };
 
@@ -325,70 +336,46 @@ export default function Chat() {
   const personalityInfo = PERSONALITY_INFO[character.personality.toLowerCase()] || PERSONALITY_INFO.friendly;
 
   return (
-    <div className="max-w-5xl mx-auto h-[calc(100vh-12rem)] flex flex-col fade-in">
-      {/* Character Header */}
-      <div className="card mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-white/20 p-4 sm:p-6 gap-4">
-        <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
-          <Avatar character={character} size="lg" />
-          <div className="min-w-0 flex-1">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-pure-white truncate">{character.name}</h2>
-            <div className="flex items-center space-x-2 mt-1">
-              <span className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${personalityInfo.color}`}></span>
-              <span className="text-xs sm:text-sm text-white/60 capitalize font-medium">{character.personality}</span>
-            </div>
+    <div className="fixed inset-0 bg-pure-black flex flex-col">
+      {/* Fixed Header - Messenger Style */}
+      <div className="bg-off-black border-b border-white/10 px-4 py-3 flex items-center space-x-3 shrink-0">
+        <Link 
+          to="/characters" 
+          className="p-2 hover:bg-white/5 rounded-full transition-colors"
+          title="Back to characters"
+        >
+          <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </Link>
+        
+        <Avatar character={character} size="md" />
+        
+        <div className="flex-1 min-w-0">
+          <h2 className="text-base font-semibold text-pure-white truncate">{character.name}</h2>
+          <div className="flex items-center space-x-1.5">
+            <span className={`w-2 h-2 rounded-full ${personalityInfo.color} animate-pulse`}></span>
+            <span className="text-xs text-white/50">Active now</span>
           </div>
         </div>
-        
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Link
-            to={`/edit/${characterId}`}
-            className="btn-icon"
-            title="Edit character"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </Link>
-          {messages.length > 0 && (
-            <button
-              onClick={handleClearChat}
-              className="btn-danger text-sm px-3"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Clear
-            </button>
-          )}
-          <Link to="/characters" className="btn-outline text-sm px-4">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back
-          </Link>
-        </div>
       </div>
 
-      {/* Character Info */}
-      <div className="card mb-4 bg-off-black border-white/20 p-4">
-        <p className="text-xs sm:text-sm text-white/70 italic leading-relaxed line-clamp-2">"{character.backstory}"</p>
-      </div>
-
-      {/* Messages Container */}
-      <div className="flex-1 card overflow-y-auto mb-4 space-y-3 sm:space-y-4 border-white/20 p-4 sm:p-6">
+      {/* Messages Container - Scrollable */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
         {messages.length === 0 ? (
-          <div className="text-center py-12 sm:py-20">
-            <Avatar character={character} size="xl" className="mx-auto mb-6" />
-            <h3 className="text-xl sm:text-2xl font-bold text-pure-white mb-3">
-              Start a Conversation with {character.name}
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <Avatar character={character} size="xl" className="mb-4" />
+            <h3 className="text-lg font-semibold text-pure-white mb-2">
+              Start chatting with {character.name}
             </h3>
-            <p className="text-white/60 text-sm sm:text-lg mb-6">
-              Try these conversation starters:
+            <p className="text-sm text-white/50 mb-6 max-w-sm">
+              {character.backstory}
             </p>
             
             {/* Conversation Starters */}
             {allMessages.length === 0 && (
-              <div className="max-w-lg mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+              <div className="w-full max-w-md space-y-2">
+                <p className="text-xs text-white/40 mb-3">Tap to start:</p>
                 {CONVERSATION_STARTERS[character.personality.toLowerCase()]?.map((starter, index) => (
                   <button
                     key={index}
@@ -396,7 +383,7 @@ export default function Chat() {
                       setInputMessage(starter);
                       document.querySelector('input[type="text"]')?.focus();
                     }}
-                    className="px-4 py-3 bg-dark-gray border border-white/20 rounded-lg text-sm text-white/80 hover:border-neon-green hover:text-pure-white hover:bg-neon-green/10 transition-all duration-300 text-left"
+                    className="w-full px-4 py-3 bg-dark-gray/50 border border-white/10 rounded-2xl text-sm text-white/70 hover:border-neon-green/50 hover:bg-neon-green/5 transition-all text-left"
                   >
                     {starter}
                   </button>
@@ -409,42 +396,35 @@ export default function Chat() {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${msg.is_user ? 'justify-end' : 'justify-start'} fade-in group`}
+                className={`flex ${msg.is_user ? 'justify-end' : 'justify-start'} group`}
               >
                 <div
-                  className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-4 sm:px-5 py-3 sm:py-4 relative ${
+                  className={`max-w-[75%] rounded-2xl px-4 py-2.5 relative ${
                     msg.is_user
-                      ? 'bg-neon-green text-pure-black font-medium'
-                      : 'bg-dark-gray text-pure-white border border-white/20'
+                      ? 'bg-neon-green text-pure-black rounded-br-md'
+                      : 'bg-dark-gray/80 text-pure-white rounded-bl-md'
                   }`}
                 >
-                  {!msg.is_user && (
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Avatar character={character} size="xs" />
-                      <span className="text-xs font-bold text-white/60 uppercase tracking-wider">{character.name}</span>
-                    </div>
-                  )}
-                  
                   {/* Message Text or Edit Input */}
                   {editingMessageId === msg.id ? (
                     <div className="space-y-2">
                       <textarea
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
-                        className="w-full px-3 py-2 bg-pure-black text-pure-white border border-white/30 rounded-lg focus:outline-none focus:border-neon-cyan text-xs sm:text-sm resize-none"
+                        className="w-full px-3 py-2 bg-pure-black text-pure-white border border-white/30 rounded-lg focus:outline-none focus:border-neon-cyan text-sm resize-none"
                         rows="3"
                         autoFocus
                       />
                       <div className="flex gap-2">
                         <button
                           onClick={handleSaveEdit}
-                          className="px-3 py-1 bg-neon-green text-pure-black rounded-md text-xs font-bold hover:bg-neon-green/80 transition-colors"
+                          className="px-3 py-1.5 bg-neon-green text-pure-black rounded-lg text-xs font-semibold hover:bg-neon-green/80"
                         >
                           Save
                         </button>
                         <button
                           onClick={handleCancelEdit}
-                          className="px-3 py-1 bg-white/20 text-white rounded-md text-xs hover:bg-white/30 transition-colors"
+                          className="px-3 py-1.5 bg-white/10 text-white rounded-lg text-xs hover:bg-white/20"
                         >
                           Cancel
                         </button>
@@ -452,24 +432,22 @@ export default function Chat() {
                     </div>
                   ) : (
                     <>
-                      <p className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed break-words">{msg.message}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className={`text-xs font-mono ${msg.is_user ? 'text-pure-black/60' : 'text-white/40'}`}>
-                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          {msg.updated_at !== msg.created_at && <span className="ml-2 italic">(edited)</span>}
-                        </p>
-                      </div>
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">{msg.message}</p>
+                      <p className={`text-[10px] mt-1 ${msg.is_user ? 'text-pure-black/50' : 'text-white/40'}`}>
+                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {msg.updated_at !== msg.created_at && <span className="ml-1.5">(edited)</span>}
+                      </p>
                     </>
                   )}
 
-                  {/* Message Actions - Only show when not editing */}
+                  {/* Message Actions - Simplified for messenger style */}
                   {editingMessageId !== msg.id && (
-                    <div className={`absolute ${msg.is_user ? '-left-2 top-1/2 -translate-x-full -translate-y-1/2' : '-right-2 top-1/2 translate-x-full -translate-y-1/2'} opacity-0 group-hover:opacity-100 transition-opacity flex ${msg.is_user ? 'flex-row-reverse' : 'flex-row'} gap-1`}>
+                    <div className={`absolute ${msg.is_user ? '-left-20 top-1/2 -translate-y-1/2' : '-right-20 top-1/2 -translate-y-1/2'} opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1`}>
                       {/* Copy Button */}
                       <button
                         onClick={() => handleCopyMessage(msg.message, msg.id)}
-                        className="p-1.5 bg-dark-gray border border-white/20 rounded-md hover:border-neon-cyan hover:bg-neon-cyan/10 transition-all"
-                        title="Copy message"
+                        className="p-1.5 bg-dark-gray/90 rounded-full hover:bg-neon-cyan/20 transition-all"
+                        title="Copy"
                       >
                         {copiedId === msg.id ? (
                           <svg className="w-4 h-4 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -486,8 +464,8 @@ export default function Chat() {
                       {msg.is_user && (
                         <button
                           onClick={() => handleStartEdit(msg)}
-                          className="p-1.5 bg-dark-gray border border-white/20 rounded-md hover:border-neon-yellow hover:bg-neon-yellow/10 transition-all"
-                          title="Edit message"
+                          className="p-1.5 bg-dark-gray/90 rounded-full hover:bg-neon-yellow/20 transition-all"
+                          title="Edit"
                         >
                           <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -498,8 +476,8 @@ export default function Chat() {
                       {/* Delete Button */}
                       <button
                         onClick={() => handleDeleteMessage(msg.id)}
-                        className="p-1.5 bg-dark-gray border border-white/20 rounded-md hover:border-neon-pink hover:bg-neon-pink/10 transition-all"
-                        title="Delete message"
+                        className="p-1.5 bg-dark-gray/90 rounded-full hover:bg-neon-pink/20 transition-all"
+                        title="Delete"
                       >
                         <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -512,16 +490,12 @@ export default function Chat() {
             ))}
             
             {isTyping && (
-              <div className="flex justify-start fade-in">
-                <div className="bg-dark-gray border border-white/20 rounded-xl px-4 sm:px-5 py-3 sm:py-4 max-w-[85%] sm:max-w-[75%]">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Avatar character={character} size="xs" />
-                    <span className="text-xs font-bold text-white/60 uppercase tracking-wider">{character.name}</span>
-                  </div>
+              <div className="flex justify-start">
+                <div className="bg-dark-gray/80 rounded-2xl rounded-bl-md px-4 py-3 max-w-[75%]">
                   <div className="flex space-x-1.5">
-                    <span className="w-2 h-2 bg-neon-green rounded-full animate-bounce"></span>
-                    <span className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
-                    <span className="w-2 h-2 bg-neon-yellow rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                    <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce"></span>
+                    <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></span>
+                    <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></span>
                   </div>
                 </div>
               </div>
@@ -532,41 +506,78 @@ export default function Chat() {
         )}
       </div>
 
-      {/* Input Form */}
-      <form onSubmit={handleSend} className="card border-white/20 p-4">
-        <div className="flex space-x-2 sm:space-x-4">
+      {/* Fixed Input Area - Messenger Style */}
+      <form onSubmit={handleSend} className="bg-off-black border-t border-white/10 px-4 py-3 shrink-0">
+        <div className="flex items-center space-x-3">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder={`Message ${character.name}...`}
-            className="flex-1 input-field text-sm sm:text-base"
+            className="flex-1 bg-dark-gray/50 text-pure-white placeholder-white/40 border border-white/10 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:border-neon-green/50 transition-colors"
             disabled={isTyping}
             autoFocus
           />
           <button
             type="submit"
             disabled={!inputMessage.trim() || isTyping}
-            className="btn-primary"
+            className={`p-2.5 rounded-full transition-all ${
+              inputMessage.trim() && !isTyping
+                ? 'bg-neon-green text-pure-black hover:bg-neon-green/80'
+                : 'bg-white/5 text-white/30 cursor-not-allowed'
+            }`}
           >
             {isTyping ? (
-              <>
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-              </>
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
             ) : (
-              <>
-                <span>Send</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </>
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
             )}
           </button>
         </div>
       </form>
+
+      {/* Delete Message Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setMessageToDelete(null);
+        }}
+        title="Delete Message"
+      >
+        <div className="space-y-4">
+          <p className="text-sm sm:text-base text-white/70">
+            Are you sure you want to delete this message?
+          </p>
+          <div className="bg-neon-pink/10 border border-neon-pink/30 p-3 sm:p-4 rounded-lg">
+            <p className="text-xs sm:text-sm text-neon-pink font-medium">
+              ⚠️ This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end pt-2">
+            <button
+              onClick={() => {
+                setDeleteModalOpen(false);
+                setMessageToDelete(null);
+              }}
+              className="btn-outline w-full sm:w-auto"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDeleteMessage}
+              className="btn-danger w-full sm:w-auto"
+            >
+              Delete Message
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

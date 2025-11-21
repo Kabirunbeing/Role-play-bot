@@ -31,9 +31,9 @@ export default {
         'rose': '#fb7185',
       },
       fontFamily: {
-        'display': ['"Space Grotesk"', 'system-ui', 'sans-serif'],
-        'body': ['"Inter"', 'system-ui', 'sans-serif'],
-        'mono': ['"Fira Code"', 'monospace'],
+        'display': ['"Sora"', 'system-ui', 'sans-serif'],
+        'body': ['"Poppins"', 'system-ui', 'sans-serif'],
+        'mono': ['"JetBrains Mono"', 'monospace'],
       },
       boxShadow: {
         'neon-green': '0 0 20px rgba(0, 255, 65, 0.5)',

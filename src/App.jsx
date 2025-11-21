@@ -53,7 +53,7 @@ function App() {
           } />
           <Route path="/chat/:characterId" element={
             <ProtectedRoute>
-              <Layout><Chat /></Layout>
+              <Chat />
             </ProtectedRoute>
           } />
           <Route path="/settings" element={

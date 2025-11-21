@@ -6,32 +6,32 @@ export default function Home() {
   const characters = useStore((state) => state.characters);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8 sm:space-y-10">
       {/* Hero Section */}
-      <div className="text-center py-12 md:py-16 fade-in">
-        <div className="mb-6">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold text-pure-white mb-4 leading-tight px-4">
+      <div className="text-center py-8 sm:py-12 md:py-16 fade-in">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-pure-white mb-3 sm:mb-4 leading-tight px-4">
             Welcome to <br className="sm:hidden" />
             <span className="text-neon-green text-neon-glow pulse-glow">RolePlayForge</span>
           </h1>
         </div>
         
-        <p className="text-base sm:text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed px-4">
+        <p className="text-sm sm:text-base md:text-lg text-white/60 max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed px-4">
           Create fictional characters with unique personalities and backstories, 
           <br className="hidden sm:block" />
           then chat with them in an immersive interface.
         </p>
         
-        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
-          <Link to="/create" className="btn-primary text-base sm:text-lg px-8 py-4">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3 px-4">
+          <Link to="/create" className="btn-primary text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-3.5">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             <span>Create Character</span>
           </Link>
           {characters.length > 0 && (
-            <Link to="/characters" className="btn-outline text-base sm:text-lg px-8 py-4">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <Link to="/characters" className="btn-outline text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-3.5">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               <span>View Characters ({characters.length})</span>
@@ -41,27 +41,27 @@ export default function Home() {
       </div>
 
       {/* Features Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 slide-up">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 slide-up">
         <div className="card-hover group">
-          <div className="text-3xl sm:text-4xl mb-4 group-hover:scale-110 transition-transform font-bold text-neon-green">CC</div>
-          <h3 className="text-lg sm:text-xl font-bold mb-3 text-pure-white">Create Characters</h3>
-          <p className="text-sm sm:text-base text-white/60 leading-relaxed">
+          <div className="text-2xl sm:text-3xl mb-3 group-hover:scale-110 transition-transform font-bold text-neon-green">CC</div>
+          <h3 className="text-base sm:text-lg font-bold mb-2 text-pure-white">Create Characters</h3>
+          <p className="text-xs sm:text-sm text-white/50 leading-relaxed">
             Design unique personalities with names, traits, and rich backstories.
           </p>
         </div>
 
         <div className="card-hover group">
-          <div className="text-3xl sm:text-4xl mb-4 group-hover:scale-110 transition-transform font-bold text-neon-cyan">IC</div>
-          <h3 className="text-lg sm:text-xl font-bold mb-3 text-pure-white">Interactive Chat</h3>
-          <p className="text-sm sm:text-base text-white/60 leading-relaxed">
+          <div className="text-2xl sm:text-3xl mb-3 group-hover:scale-110 transition-transform font-bold text-neon-cyan">IC</div>
+          <h3 className="text-base sm:text-lg font-bold mb-2 text-pure-white">Interactive Chat</h3>
+          <p className="text-xs sm:text-sm text-white/50 leading-relaxed">
             Have conversations that reflect each character's unique personality.
           </p>
         </div>
 
         <div className="card-hover group sm:col-span-2 lg:col-span-1">
-          <div className="text-3xl sm:text-4xl mb-4 group-hover:scale-110 transition-transform font-bold text-neon-purple">BW</div>
-          <h3 className="text-lg sm:text-xl font-bold mb-3 text-pure-white">Build Your World</h3>
-          <p className="text-sm sm:text-base text-white/60 leading-relaxed">
+          <div className="text-2xl sm:text-3xl mb-3 group-hover:scale-110 transition-transform font-bold text-neon-purple">BW</div>
+          <h3 className="text-base sm:text-lg font-bold mb-2 text-pure-white">Build Your World</h3>
+          <p className="text-xs sm:text-sm text-white/50 leading-relaxed">
             Create multiple characters and explore different narrative possibilities.
           </p>
         </div>
@@ -77,19 +77,19 @@ export default function Home() {
       {/* Getting Started */}
       {characters.length === 0 && (
         <div className="card bg-off-black border-neon-green/30 slide-up">
-          <h3 className="text-xl sm:text-2xl font-bold mb-6 text-neon-green">Getting Started</h3>
-          <ol className="space-y-4 text-sm sm:text-base text-white/70">
+          <h3 className="text-lg sm:text-xl font-bold mb-4 sm:mb-5 text-neon-green">Getting Started</h3>
+          <ol className="space-y-3 sm:space-y-4 text-xs sm:text-sm text-white/60">
             <li className="flex items-start">
-              <span className="font-bold text-neon-green mr-3 text-lg sm:text-xl flex-shrink-0">1.</span>
-              <span className="pt-1">Click "Create Character" to design a new character</span>
+              <span className="font-bold text-neon-green mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">1.</span>
+              <span className="pt-0.5 sm:pt-1">Click "Create Character" to design a new character</span>
             </li>
             <li className="flex items-start">
-              <span className="font-bold text-neon-cyan mr-3 text-lg sm:text-xl flex-shrink-0">2.</span>
-              <span className="pt-1">Give them a name, personality type, and backstory</span>
+              <span className="font-bold text-neon-cyan mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">2.</span>
+              <span className="pt-0.5 sm:pt-1">Give them a name, personality type, and backstory</span>
             </li>
             <li className="flex items-start">
-              <span className="font-bold text-neon-yellow mr-3 text-lg sm:text-xl flex-shrink-0">3.</span>
-              <span className="pt-1">Start chatting and watch them respond based on their personality!</span>
+              <span className="font-bold text-neon-yellow mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">3.</span>
+              <span className="pt-0.5 sm:pt-1">Start chatting and watch them respond based on their personality!</span>
             </li>
           </ol>
         </div>

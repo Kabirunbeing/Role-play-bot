@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, getGroqKey } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import Groq from 'groq-sdk';
 
 const PERSONALITY_TYPES = [
   { value: 'friendly', label: 'Friendly', description: 'Warm and supportive' },
@@ -35,6 +36,7 @@ export default function CreateCharacter() {
   const [imagePreview, setImagePreview] = useState(null);
   const [characterCount, setCharacterCount] = useState(0);
   const [checkingLimit, setCheckingLimit] = useState(true);
+  const [generatingBackstory, setGeneratingBackstory] = useState(false);
 
   useEffect(() => {
     checkCharacterLimit();
@@ -90,6 +92,80 @@ export default function CreateCharacter() {
       };
       reader.readAsDataURL(file);
       setErrors((prev) => ({ ...prev, image: '' }));
+    }
+  };
+
+  const generateBackstory = async () => {
+    if (!formData.name || !formData.personality) {
+      setErrors((prev) => ({ 
+        ...prev, 
+        backstory: 'Please enter a character name and select a personality first' 
+      }));
+      return;
+    }
+
+    setGeneratingBackstory(true);
+    setErrors((prev) => ({ ...prev, backstory: '' }));
+
+    try {
+      const { apiKey, error: keyError } = await getGroqKey();
+      
+      if (keyError || !apiKey) {
+        throw new Error('Failed to get API key');
+      }
+
+      const groq = new Groq({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true,
+      });
+
+      const personalityDesc = PERSONALITY_TYPES.find(p => p.value === formData.personality)?.description || formData.personality;
+      const ageInfo = formData.age ? ` who is ${formData.age} years old` : '';
+      const genderInfo = formData.gender ? ` (${formData.gender})` : '';
+
+      const prompt = `Create a detailed and engaging backstory (150-200 words) for a roleplaying character named ${formData.name}${ageInfo}${genderInfo}. The character has a ${formData.personality} personality (${personalityDesc}). 
+
+Make the backstory:
+- Rich in detail and emotional depth
+- Include their past experiences and what shaped them
+- Mention their motivations and desires
+- Make them feel like a real person with dreams and struggles
+- Write in third person
+- Do not use markdown formatting
+
+Write the backstory now:`;
+
+      const completion = await groq.chat.completions.create({
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a creative writer specializing in character development. Write engaging, detailed backstories for roleplaying characters.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        model: 'llama-3.3-70b-versatile',
+        temperature: 0.8,
+        max_tokens: 500,
+      });
+
+      const generatedBackstory = completion.choices[0]?.message?.content?.trim();
+      
+      if (generatedBackstory) {
+        setFormData(prev => ({ ...prev, backstory: generatedBackstory }));
+      } else {
+        throw new Error('No backstory generated');
+      }
+    } catch (error) {
+      console.error('Error generating backstory:', error);
+      setErrors((prev) => ({ 
+        ...prev, 
+        backstory: 'Failed to generate backstory. Please try again or write one manually.' 
+      }));
+    } finally {
+      setGeneratingBackstory(false);
     }
   };
 
@@ -173,17 +249,17 @@ export default function CreateCharacter() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto fade-in">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl md:text-5xl font-display font-bold text-pure-white mb-3">
+    <div className="max-w-3xl mx-auto fade-in">
+      <div className="mb-6 sm:mb-8 text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-pure-white mb-2">
           Create New <span className="text-neon-green">Character</span>
         </h1>
-        <p className="text-white/60 text-lg">
+        <p className="text-white/50 text-sm sm:text-base max-w-2xl mx-auto">
           Design a unique character with personality and depth
         </p>
-        <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-dark-gray/50 border border-white/10 rounded-lg">
-          <span className="text-white/60 text-sm">Characters:</span>
-          <span className={`font-bold text-sm ${characterCount >= 2 ? 'text-red-400' : 'text-neon-green'}`}>
+        <div className="mt-3 sm:mt-4 inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-dark-gray/50 border border-white/10 rounded-lg">
+          <span className="text-white/50 text-xs sm:text-sm">Characters:</span>
+          <span className={`font-bold text-xs sm:text-sm ${characterCount >= 2 ? 'text-red-400' : 'text-neon-green'}`}>
             {characterCount}/2
           </span>
         </div>
@@ -210,10 +286,10 @@ export default function CreateCharacter() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Character Image */}
         <div className="card border-white/20">
-          <label className="block text-sm font-bold text-pure-white mb-4 uppercase tracking-wider">
+          <label className="block text-xs sm:text-sm font-bold text-pure-white mb-3 uppercase tracking-wider">
             Character Image
           </label>
           
@@ -280,7 +356,7 @@ export default function CreateCharacter() {
 
         {/* Character Name */}
         <div className="card border-white/20">
-          <label htmlFor="name" className="block text-sm font-bold text-pure-white mb-3 uppercase tracking-wider">
+          <label htmlFor="name" className="block text-xs sm:text-sm font-bold text-pure-white mb-2 uppercase tracking-wider">
             Character Name *
           </label>
           <input
@@ -289,18 +365,18 @@ export default function CreateCharacter() {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className={`input-field ${errors.name ? 'border-neon-pink shadow-lg shadow-neon-pink/50' : ''}`}
-            placeholder="Enter character name"
+            className={`input-field text-sm sm:text-base ${errors.name ? 'border-neon-pink shadow-lg shadow-neon-pink/50' : ''}`}
+            placeholder="e.g., Elena Blackwood"
           />
           {errors.name && (
-            <p className="mt-2 text-sm text-neon-pink font-medium">{errors.name}</p>
+            <p className="mt-2 text-xs sm:text-sm text-neon-pink font-medium">{errors.name}</p>
           )}
         </div>
 
         {/* Age and Gender */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
           <div className="card border-white/20">
-            <label htmlFor="age" className="block text-sm font-bold text-pure-white mb-3 uppercase tracking-wider">
+            <label htmlFor="age" className="block text-xs sm:text-sm font-bold text-pure-white mb-2 uppercase tracking-wider">
               Age (Optional)
             </label>
             <input
@@ -309,17 +385,17 @@ export default function CreateCharacter() {
               name="age"
               value={formData.age}
               onChange={handleChange}
-              className={`input-field ${errors.age ? 'border-neon-pink shadow-lg shadow-neon-pink/50' : ''}`}
-              placeholder="Enter age"
+              className={`input-field text-sm sm:text-base ${errors.age ? 'border-neon-pink shadow-lg shadow-neon-pink/50' : ''}`}
+              placeholder="e.g., 25"
               min="0"
             />
             {errors.age && (
-              <p className="mt-2 text-sm text-neon-pink font-medium">{errors.age}</p>
+              <p className="mt-2 text-xs sm:text-sm text-neon-pink font-medium">{errors.age}</p>
             )}
           </div>
 
           <div className="card border-white/20">
-            <label htmlFor="gender" className="block text-sm font-bold text-pure-white mb-3 uppercase tracking-wider">
+            <label htmlFor="gender" className="block text-xs sm:text-sm font-bold text-pure-white mb-2 uppercase tracking-wider">
               Gender (Optional)
             </label>
             <select
@@ -327,7 +403,7 @@ export default function CreateCharacter() {
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="input-field"
+              className="input-field text-sm sm:text-base"
             >
               <option value="">Select gender</option>
               {GENDER_OPTIONS.map(option => (
@@ -339,46 +415,79 @@ export default function CreateCharacter() {
 
         {/* Personality */}
         <div className="card border-white/20">
-          <label className="block text-sm font-bold text-pure-white mb-4 uppercase tracking-wider">
+          <label className="block text-xs sm:text-sm font-bold text-pure-white mb-3 uppercase tracking-wider">
             Personality Type *
           </label>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             {PERSONALITY_TYPES.map((type) => (
               <button
                 key={type.value}
                 type="button"
                 onClick={() => setFormData((prev) => ({ ...prev, personality: type.value }))}
-                className={`p-4 rounded-lg border-2 transition-all duration-300 text-left ${
+                className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 text-left ${
                   formData.personality === type.value
                     ? 'border-neon-green bg-neon-green/10 shadow-lg shadow-neon-green/50'
                     : 'border-white/10 bg-dark-gray hover:border-white/30'
                 }`}
               >
-                <p className="font-bold text-pure-white text-base mb-1">{type.label}</p>
-                <p className="text-xs text-white/60">{type.description}</p>
+                <p className="font-bold text-pure-white text-sm sm:text-base mb-0.5 sm:mb-1">{type.label}</p>
+                <p className="text-[10px] sm:text-xs text-white/60">{type.description}</p>
               </button>
             ))}
           </div>
         </div>
 
         {/* Backstory */}
-        <div className="card border-white/20">
-          <label htmlFor="backstory" className="block text-sm font-bold text-pure-white mb-3 uppercase tracking-wider">
-            Backstory *
-          </label>
+        <div className="card border-white/20 relative">
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <label htmlFor="backstory" className="block text-xs sm:text-sm font-bold text-pure-white uppercase tracking-wider">
+              Backstory *
+            </label>
+            <button
+              type="button"
+              onClick={generateBackstory}
+              disabled={generatingBackstory}
+              className="group relative flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-neon-cyan/10 to-neon-purple/10 hover:from-neon-cyan/20 hover:to-neon-purple/20 border border-neon-cyan/30 hover:border-neon-cyan/50 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Generate AI backstory"
+            >
+              {generatingBackstory ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-neon-cyan" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span className="text-xs font-semibold text-neon-cyan">Generating...</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-lg">✨</span>
+                  <span className="text-xs font-semibold text-neon-cyan">AI Generate</span>
+                </>
+              )}
+              
+              {/* Tooltip */}
+              {!generatingBackstory && (
+                <div className="absolute right-0 top-full mt-2 w-48 px-3 py-2 bg-dark-gray border border-neon-cyan/30 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 shadow-lg shadow-neon-cyan/20">
+                  <p className="text-xs text-white/80 leading-relaxed">
+                    Save time! Let AI create a detailed backstory based on your character's info
+                  </p>
+                </div>
+              )}
+            </button>
+          </div>
           <textarea
             id="backstory"
             name="backstory"
             value={formData.backstory}
             onChange={handleChange}
-            rows={8}
-            className={`input-field resize-none ${errors.backstory ? 'border-neon-pink shadow-lg shadow-neon-pink/50' : ''}`}
+            rows={7}
+            className={`input-field resize-none text-sm sm:text-base leading-relaxed ${errors.backstory ? 'border-neon-pink shadow-lg shadow-neon-pink/50' : ''}`}
             placeholder="Write a detailed backstory for your character... Who are they? What's their history? What motivates them?"
           />
           {errors.backstory && (
-            <p className="mt-2 text-sm text-neon-pink font-medium">{errors.backstory}</p>
+            <p className="mt-2 text-xs sm:text-sm text-neon-pink font-medium">{errors.backstory}</p>
           )}
-          <p className="mt-2 text-xs text-white/40 font-mono">
+          <p className="mt-2 text-[10px] sm:text-xs text-white/40 font-mono">
             {formData.backstory.length} / 50 minimum characters
           </p>
         </div>
@@ -386,12 +495,12 @@ export default function CreateCharacter() {
         {/* Error Message */}
         {errors.submit && (
           <div className="card border-neon-pink/50 bg-neon-pink/10">
-            <p className="text-sm text-neon-pink font-medium">{errors.submit}</p>
+            <p className="text-xs sm:text-sm text-neon-pink font-medium">{errors.submit}</p>
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
           <button
             type="button"
             onClick={() => navigate(-1)}
