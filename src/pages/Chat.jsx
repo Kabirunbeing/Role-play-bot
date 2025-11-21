@@ -199,23 +199,20 @@ export default function Chat() {
       console.error('Error saving user message:', error);
     }
 
-    // Prefer frontend key for quick availability checks, fall back to backend
-    let apiKey = import.meta.env.VITE_GROQ_API_KEY;
-    let keySource = 'frontend';
+    // Fetch Groq API key from backend
+    const { apiKey, error: keyError } = await getGroqKey();
     
-    if (!apiKey) {
-      const { apiKey: storedKey, error: keyError } = await getGroqKey();
-      if (keyError || !storedKey) {
-        console.log('No API key available, using mock response');
-        await sendMessage(message);
-        setIsTyping(false);
-        return;
-      }
-      apiKey = storedKey;
-      keySource = 'backend';
+    if (keyError || !apiKey) {
+      console.error('Failed to fetch API key from backend:', keyError);
+      setAllMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        message: 'Sorry, I cannot respond right now. Please try again later.',
+        is_user: false,
+        created_at: new Date().toISOString()
+      }]);
+      setIsTyping(false);
+      return;
     }
-
-    console.log(`Using Groq API key from ${keySource}`);
 
     // Generate AI response
     try {

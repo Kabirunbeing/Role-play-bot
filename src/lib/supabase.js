@@ -5,40 +5,21 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Save Groq API key for current user
-export async function saveGroqKey(apiKey) {
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    return { error: new Error('User not authenticated') }
-  }
-
-  const { error } = await supabase
-    .from('user_api_keys')
-    .upsert({ 
-      user_id: user.id, 
-      groq_api_key: apiKey,
-      updated_at: new Date().toISOString()
-    })
-  
-  return { error }
-}
-
-// Get Groq API key for current user
+// Fetch shared Groq API key from backend
 export async function getGroqKey() {
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    return { apiKey: null, error: new Error('User not authenticated') }
-  }
+  try {
+    const { data, error } = await supabase
+      .from('shared_api_keys')
+      .select('api_key')
+      .eq('service', 'groq')
+      .single()
 
-  const { data, error } = await supabase
-    .from('user_api_keys')
-    .select('groq_api_key')
-    .eq('user_id', user.id)
-    .single()
-  
-  return { apiKey: data?.groq_api_key, error }
+    if (error) throw error
+    return { apiKey: data.api_key, error: null }
+  } catch (error) {
+    console.error('Error fetching Groq key from backend:', error)
+    return { apiKey: null, error }
+  }
 }
 
 // Delete Groq API key for current user

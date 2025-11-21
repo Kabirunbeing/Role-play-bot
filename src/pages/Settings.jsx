@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
-import { saveGroqKey, getGroqKey, deleteGroqKey } from '../lib/supabase';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -20,63 +19,6 @@ export default function Settings() {
   const [showClearModal, setShowClearModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importText, setImportText] = useState('');
-  
-  // API Key management
-  const [apiKey, setApiKey] = useState('');
-  const [hasApiKey, setHasApiKey] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [apiKeyLoading, setApiKeyLoading] = useState(false);
-  const [apiKeyMessage, setApiKeyMessage] = useState({ text: '', type: '' });
-
-  useEffect(() => {
-    loadApiKey();
-  }, []);
-
-  const loadApiKey = async () => {
-    const { apiKey: key, error } = await getGroqKey();
-    if (!error && key) {
-      setHasApiKey(true);
-      setApiKey(key);
-    }
-  };
-
-  const handleSaveApiKey = async () => {
-    if (!apiKey.trim()) {
-      setApiKeyMessage({ text: 'Please enter an API key', type: 'error' });
-      return;
-    }
-
-    setApiKeyLoading(true);
-    const { error } = await saveGroqKey(apiKey.trim());
-    
-    if (error) {
-      setApiKeyMessage({ text: error.message, type: 'error' });
-    } else {
-      setApiKeyMessage({ text: 'API key saved successfully!', type: 'success' });
-      setHasApiKey(true);
-    }
-    
-    setApiKeyLoading(false);
-    setTimeout(() => setApiKeyMessage({ text: '', type: '' }), 3000);
-  };
-
-  const handleDeleteApiKey = async () => {
-    if (!window.confirm('Are you sure you want to delete your API key?')) return;
-    
-    setApiKeyLoading(true);
-    const { error } = await deleteGroqKey();
-    
-    if (error) {
-      setApiKeyMessage({ text: error.message, type: 'error' });
-    } else {
-      setApiKeyMessage({ text: 'API key deleted', type: 'success' });
-      setHasApiKey(false);
-      setApiKey('');
-    }
-    
-    setApiKeyLoading(false);
-    setTimeout(() => setApiKeyMessage({ text: '', type: '' }), 3000);
-  };
 
   const handleSettingChange = (key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -122,79 +64,6 @@ export default function Settings() {
         <p className="text-white/60 text-lg">
           Customize your RolePlayForge experience
         </p>
-      </div>
-
-      {/* API Key Management */}
-      <div className="card border-white/20 mb-6">
-        <h2 className="text-2xl font-bold text-neon-green mb-6">🔑 Groq API Key</h2>
-        
-        <div className="space-y-4">
-          <p className="text-white/60 text-sm">
-            Your API key is securely stored in Supabase and never exposed to the frontend.
-          </p>
-
-          {apiKeyMessage.text && (
-            <div className={`p-4 rounded-lg ${
-              apiKeyMessage.type === 'error' 
-                ? 'bg-neon-pink/10 border border-neon-pink/30 text-neon-pink' 
-                : 'bg-neon-green/10 border border-neon-green/30 text-neon-green'
-            }`}>
-              {apiKeyMessage.text}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-pure-white mb-2 uppercase tracking-wide">
-              API Key
-            </label>
-            <div className="flex gap-3">
-              <input
-                type={showApiKey ? "text" : "password"}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder={hasApiKey ? "••••••••••••••••" : "Enter your Groq API key"}
-                className="input-field flex-1"
-                disabled={apiKeyLoading}
-              />
-              <button
-                onClick={() => setShowApiKey(!showApiKey)}
-                className="px-4 py-2 bg-dark-gray border border-white/20 rounded-lg text-pure-white hover:bg-white/5 transition-colors"
-                disabled={apiKeyLoading}
-              >
-                {showApiKey ? '👁️' : '👁️‍🗨️'}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleSaveApiKey}
-              disabled={apiKeyLoading}
-              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {apiKeyLoading ? 'Saving...' : hasApiKey ? 'Update API Key' : 'Save API Key'}
-            </button>
-            
-            {hasApiKey && (
-              <button
-                onClick={handleDeleteApiKey}
-                disabled={apiKeyLoading}
-                className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Delete Key
-              </button>
-            )}
-          </div>
-
-          <div className="mt-4 p-4 bg-neon-cyan/5 border border-neon-cyan/20 rounded-lg">
-            <p className="text-sm text-neon-cyan font-medium mb-2">ℹ️ How to get your API key:</p>
-            <ol className="text-sm text-white/70 space-y-1 ml-4 list-decimal">
-              <li>Go to <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-neon-cyan hover:underline">Google AI Studio</a></li>
-              <li>Click "Create API Key"</li>
-              <li>Copy and paste it above</li>
-            </ol>
-          </div>
-        </div>
       </div>
 
       {/* General Settings */}
