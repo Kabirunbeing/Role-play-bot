@@ -35,6 +35,9 @@ export const AuthProvider = ({ children }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${import.meta.env.VITE_APP_URL}/login`,
+      }
     })
     return { data, error }
   }
@@ -52,12 +55,28 @@ export const AuthProvider = ({ children }) => {
     return { error }
   }
 
+  const resetPassword = async (email) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${import.meta.env.VITE_APP_URL}/reset-password`,
+    })
+    return { data, error }
+  }
+
+  const updatePassword = async (newPassword) => {
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword
+    })
+    return { data, error }
+  }
+
   const value = {
     user,
     loading,
     signUp,
     signIn,
     signOut,
+    resetPassword,
+    updatePassword,
   }
 
   return (
