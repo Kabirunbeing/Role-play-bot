@@ -27,7 +27,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 fade-in">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 fade-in">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-pure-black/80 backdrop-blur-sm"

@@ -278,9 +278,14 @@ export default function Chat() {
       return;
     }
 
-    setGeneratingImage(true);
+    // Force state update and wait for render
+    await new Promise(resolve => {
+      setGeneratingImage(true);
+      setTimeout(resolve, 800);
+    });
 
     try {
+
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData?.user) {
         throw new Error('User not authenticated');
@@ -724,6 +729,24 @@ IMPORTANT RULES:
               </div>
             ))}
             
+            {/* Generating Image Indicator */}
+            {generatingImage && (
+              <div className="flex justify-start">
+                <div className="bg-neon-purple/20 border border-neon-purple/30 rounded-2xl rounded-bl-md px-4 py-3 max-w-[75%]">
+                  <div className="flex items-center space-x-3">
+                    <svg className="animate-spin h-5 w-5 text-neon-purple" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-neon-purple">Generating image...</p>
+                      <p className="text-xs text-white/50">This may take a few seconds</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {isTyping && (
               <div className="flex justify-start">
                 <div className="bg-dark-gray/80 rounded-2xl rounded-bl-md px-4 py-3 max-w-[75%]">
@@ -873,6 +896,40 @@ IMPORTANT RULES:
           </button>
         </div>
       </form>
+
+      {/* Generating Image Modal */}
+      <Modal
+        isOpen={generatingImage}
+        onClose={() => {}}
+        title="Generating Image"
+        size="sm"
+      >
+        <div className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col items-center justify-center py-4 sm:py-8">
+            {/* Animated spinner */}
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-6">
+              <svg className="animate-spin h-16 w-16 sm:h-20 sm:w-20 text-neon-purple" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xl sm:text-2xl">🎨</span>
+              </div>
+            </div>
+            
+            <h3 className="text-base sm:text-lg font-semibold text-pure-white mb-1 sm:mb-2 text-center px-2">Creating your image...</h3>
+            <p className="text-xs sm:text-sm text-white/60 text-center max-w-xs px-4">
+              AI is generating a unique image based on your prompt
+            </p>
+          </div>
+          
+          <div className="bg-neon-purple/10 border border-neon-purple/30 p-3 sm:p-4 rounded-lg">
+            <p className="text-[10px] sm:text-xs text-neon-purple font-medium text-center">
+              ✨ This may take a few seconds
+            </p>
+          </div>
+        </div>
+      </Modal>
 
       {/* Delete Message Confirmation Modal */}
       <Modal

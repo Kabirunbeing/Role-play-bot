@@ -8,7 +8,6 @@ import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import CreateCharacter from './pages/CreateCharacter';
-import EditCharacter from './pages/EditCharacter';
 import CharacterList from './pages/CharacterList';
 import Chat from './pages/Chat';
 import Settings from './pages/Settings';
@@ -38,7 +37,7 @@ function App() {
           } />
           <Route path="/edit/:characterId" element={
             <ProtectedRoute>
-              <Layout><EditCharacter /></Layout>
+              <Layout><CreateCharacter /></Layout>
             </ProtectedRoute>
           } />
           <Route path="/characters" element={

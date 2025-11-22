@@ -346,6 +346,15 @@ export default function CharacterList() {
                     <span className="hidden sm:inline">Start Chat</span>
                     <span className="sm:hidden">Chat</span>
                   </Link>
+                  <Link
+                    to={`/edit/${character.id}`}
+                    className="btn-outline px-2 sm:px-4"
+                    title="Edit character"
+                  >
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </Link>
                   <button
                     onClick={() => handleDelete(character.id, character.name)}
                     className="btn-danger px-2 sm:px-4"
