@@ -64,6 +64,16 @@ export default function Chat() {
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editText, setEditText] = useState('');
   const [copiedId, setCopiedId] = useState(null);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [imageCount, setImageCount] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isCancelled, setIsCancelled] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const startXRef = useRef(0);
+  const currentXRef = useRef(0);
   
   const messages = allMessages;
 
@@ -100,6 +110,120 @@ export default function Chat() {
 
     loadData();
   }, [characterId, setActiveCharacter, navigate]);
+
+  useEffect(() => {
+    // Load user's image generation count
+    async function loadImageCount() {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user) return;
+
+        try {
+          const { data, error } = await supabase
+            .from('chat_messages')
+            .select('id')
+            .eq('user_id', userData.user.id)
+            .eq('character_id', characterId)
+            .not('image_url', 'is', null);
+
+          if (error && !error.message.includes('column')) throw error;
+          setImageCount(data?.length || 0);
+        } catch (queryError) {
+          console.warn('Image count query failed (column may not exist):', queryError);
+          setImageCount(0);
+        }
+      } catch (error) {
+        console.error('Error loading image count:', error);
+        setImageCount(0);
+      }
+    }
+    loadImageCount();
+  }, [characterId, allMessages]);
+
+  const startRecording = async (e) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      
+      // Track initial position for swipe
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      startXRef.current = clientX;
+      currentXRef.current = clientX;
+      setSwipeOffset(0);
+      setIsCancelled(false);
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        if (!isCancelled) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          await transcribeAudio(audioBlob);
+        }
+        stream.getTracks().forEach(track => track.stop());
+        setSwipeOffset(0);
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Microphone access error:', error);
+      alert('Please allow microphone access to use voice input');
+    }
+  };
+
+  const handleSwipe = (e) => {
+    if (!isRecording) return;
+    
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    currentXRef.current = clientX;
+    const diff = startXRef.current - clientX;
+    
+    if (diff > 0) {
+      setSwipeOffset(Math.min(diff, 120)); // Max swipe distance
+      
+      // Cancel if swiped more than 100px to the left
+      if (diff > 100 && !isCancelled) {
+        setIsCancelled(true);
+      }
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const transcribeAudio = async (audioBlob) => {
+    try {
+      setIsTranscribing(true);
+      const { apiKey, error: keyError } = await getGroqKey();
+      
+      if (keyError || !apiKey) {
+        throw new Error('Failed to get API key');
+      }
+
+      const groq = new Groq({ apiKey, dangerouslyAllowBrowser: true });
+      const audioFile = new File([audioBlob], 'voice.webm', { type: 'audio/webm' });
+
+      const transcription = await groq.audio.transcriptions.create({
+        file: audioFile,
+        model: 'whisper-large-v3',
+        language: 'en'
+      });
+
+      setInputMessage(transcription.text);
+    } catch (error) {
+      console.error('Transcription error:', error);
+      alert('Failed to transcribe audio. Please try again.');
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -140,6 +264,75 @@ export default function Chat() {
     } finally {
       setDeleteModalOpen(false);
       setMessageToDelete(null);
+    }
+  };
+
+  const handleGenerateImage = async (prompt) => {
+    if (imageCount >= 5) {
+      alert('You have reached the maximum limit of 5 images for this character.');
+      return;
+    }
+
+    setGeneratingImage(true);
+
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData?.user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Using Pollinations.ai - free image generation API
+      // Generate contextual image based on user's roleplay prompt with character
+      const imagePrompt = `${prompt} featuring ${character.name}, ${character.personality} character, detailed, cinematic, high quality`;
+      const encodedPrompt = encodeURIComponent(imagePrompt);
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true&seed=${Date.now()}`;
+
+      // Pre-load image to ensure it works
+      await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = imageUrl;
+      });
+
+      // Save image message to database
+      const insertData = {
+        user_id: userData.user.id,
+        character_id: characterId,
+        message: `🖼️ ${prompt}`,
+        is_user: true
+      };
+
+      // Try to add image_url if column exists, otherwise just save without it
+      try {
+        insertData.image_url = imageUrl;
+        const { data: imageMsg, error: imageMsgError } = await supabase
+          .from('chat_messages')
+          .insert([insertData])
+          .select()
+          .single();
+
+        if (imageMsgError) throw imageMsgError;
+        setAllMessages(prev => [...prev, imageMsg]);
+      } catch (dbError) {
+        // If image_url column doesn't exist, create a local message object
+        console.warn('Database insertion failed, using local state:', dbError);
+        const localMsg = {
+          id: Date.now(),
+          ...insertData,
+          image_url: imageUrl,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setAllMessages(prev => [...prev, localMsg]);
+      }
+
+      setImageCount(prev => prev + 1);
+    } catch (error) {
+      console.error('Error generating image:', error);
+      alert(`Failed to generate image: ${error.message || 'Unknown error'}`);
+    } finally {
+      setGeneratingImage(false);
     }
   };
 
@@ -184,6 +377,27 @@ export default function Chat() {
 
     const message = inputMessage.trim();
     setInputMessage('');
+
+    // Detect image generation requests
+    const imageKeywords = ['generate image', 'create image', 'show me', 'draw', 'picture of', 'image of', 'visualize'];
+    const isImageRequest = imageKeywords.some(keyword => message.toLowerCase().includes(keyword));
+
+    if (isImageRequest && imageCount < 5) {
+      // Extract the actual prompt after the keyword
+      let imagePrompt = message;
+      for (const keyword of imageKeywords) {
+        if (message.toLowerCase().includes(keyword)) {
+          const parts = message.split(new RegExp(keyword, 'i'));
+          if (parts[1]) {
+            imagePrompt = parts[1].trim();
+          }
+          break;
+        }
+      }
+      await handleGenerateImage(imagePrompt || message);
+      return;
+    }
+
     setIsTyping(true);
 
     // Save user message to database
@@ -230,7 +444,14 @@ export default function Chat() {
       const groq = new Groq({ apiKey, dangerouslyAllowBrowser: true });
       
       // Create character-specific prompt
-      const systemPrompt = `You are ${character.name}, a ${character.personality} character. Backstory: ${character.backstory}. Respond in character, matching your personality. Keep responses natural and conversational.`;
+      const systemPrompt = `You are ${character.name}, a ${character.personality} character. Backstory: ${character.backstory}. 
+
+IMPORTANT RULES:
+- Keep responses SHORT and CONCISE (2-4 sentences maximum)
+- Respond naturally as if texting or chatting
+- Match your ${character.personality} personality
+- Be conversational, not verbose
+- Don't write long paragraphs or explanations`;
 
       const chatCompletion = await groq.chat.completions.create({
         messages: [
@@ -238,8 +459,9 @@ export default function Chat() {
           { role: 'user', content: message }
         ],
         model: 'llama-3.3-70b-versatile',
-        temperature: 0.8,
-        max_tokens: 500
+        temperature: 0.7,
+        max_tokens: 150,
+        top_p: 0.9
       });
       
       const aiResponse = chatCompletion.choices[0]?.message?.content || 'Sorry, I could not respond.';
@@ -432,6 +654,14 @@ export default function Chat() {
                     </div>
                   ) : (
                     <>
+                      {msg.image_url && (
+                        <img 
+                          src={msg.image_url} 
+                          alt="Generated" 
+                          className="w-full max-w-sm rounded-lg mb-2 border border-white/10"
+                          loading="lazy"
+                        />
+                      )}
                       <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">{msg.message}</p>
                       <p className={`text-[10px] mt-1 ${msg.is_user ? 'text-pure-black/50' : 'text-white/40'}`}>
                         {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -506,28 +736,125 @@ export default function Chat() {
         )}
       </div>
 
+      {/* Image Prompt Suggestions */}
+      {imageCount < 5 && (
+        <div className="bg-off-black border-t border-white/10 px-4 py-2 shrink-0">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <span className="text-xs text-white/40 whitespace-nowrap">💡 Try:</span>
+            <button
+              onClick={() => setInputMessage(`show me ${character.name}'s portrait`)}
+              className="text-xs bg-neon-purple/20 text-neon-purple px-3 py-1.5 rounded-full hover:bg-neon-purple/30 transition-all whitespace-nowrap"
+            >
+              Show portrait
+            </button>
+            <button
+              onClick={() => setInputMessage('create image of the scene we are in')}
+              className="text-xs bg-neon-blue/20 text-neon-blue px-3 py-1.5 rounded-full hover:bg-neon-blue/30 transition-all whitespace-nowrap"
+            >
+              Current scene
+            </button>
+            <button
+              onClick={() => setInputMessage(`visualize ${character.name} in action`)}
+              className="text-xs bg-neon-pink/20 text-neon-pink px-3 py-1.5 rounded-full hover:bg-neon-pink/30 transition-all whitespace-nowrap"
+            >
+              Action shot
+            </button>
+            <button
+              onClick={() => setInputMessage('picture of the location')}
+              className="text-xs bg-neon-yellow/20 text-neon-yellow px-3 py-1.5 rounded-full hover:bg-neon-yellow/30 transition-all whitespace-nowrap"
+            >
+              Location
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Fixed Input Area - Messenger Style */}
       <form onSubmit={handleSend} className="bg-off-black border-t border-white/10 px-4 py-3 shrink-0">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
+          {/* Voice Recording Button */}
+          <div className="relative group flex items-center">
+            {/* Cancel text that appears when swiping */}
+            {isRecording && (
+              <div 
+                className="absolute right-full mr-2 flex items-center transition-opacity"
+                style={{ opacity: swipeOffset > 30 ? 1 : 0 }}
+              >
+                <svg className="w-4 h-4 text-neon-pink mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className={`text-sm font-medium ${
+                  isCancelled ? 'text-neon-pink' : 'text-white/60'
+                }`}>
+                  {isCancelled ? 'Cancelled' : 'Slide to cancel'}
+                </span>
+              </div>
+            )}
+            
+            <button
+              type="button"
+              onMouseDown={startRecording}
+              onMouseMove={handleSwipe}
+              onMouseUp={stopRecording}
+              onTouchStart={startRecording}
+              onTouchMove={handleSwipe}
+              onTouchEnd={stopRecording}
+              disabled={isTyping || generatingImage || isTranscribing}
+              className={`p-2.5 rounded-full transition-all shrink-0 ${
+                isRecording
+                  ? 'bg-neon-pink text-pure-black animate-pulse scale-110'
+                  : isTranscribing
+                  ? 'bg-neon-purple/30 text-neon-purple'
+                  : 'bg-dark-gray/50 text-white/60 hover:bg-neon-purple/20 hover:text-neon-purple'
+              }`}
+              style={{
+                transform: isRecording ? `translateX(-${swipeOffset}px) scale(1.1)` : undefined,
+                transition: 'transform 0.1s ease-out'
+              }}
+            >
+            {isTranscribing ? (
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            )}
+          </button>
+          
+          {/* Tooltip on hover */}
+          {!isRecording && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-pure-black border border-white/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+              <p className="text-xs text-white font-medium mb-0.5">🎤 Hold & Speak</p>
+              <p className="text-[10px] text-white/60">Swipe left to cancel</p>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
+                <div className="border-4 border-transparent border-t-pure-black"></div>
+              </div>
+            </div>
+          )}
+        </div>
+
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            placeholder={`Message ${character.name}...`}
+            placeholder={isRecording ? 'Recording...' : isTranscribing ? 'Converting to text...' : `Message ${character.name}... (${imageCount}/5 images used)`}
             className="flex-1 bg-dark-gray/50 text-pure-white placeholder-white/40 border border-white/10 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:border-neon-green/50 transition-colors"
-            disabled={isTyping}
+            disabled={isTyping || generatingImage || isRecording || isTranscribing}
             autoFocus
           />
           <button
             type="submit"
-            disabled={!inputMessage.trim() || isTyping}
-            className={`p-2.5 rounded-full transition-all ${
-              inputMessage.trim() && !isTyping
+            disabled={!inputMessage.trim() || isTyping || generatingImage || isRecording || isTranscribing}
+            className={`p-2.5 rounded-full transition-all shrink-0 ${
+              inputMessage.trim() && !isTyping && !generatingImage && !isRecording && !isTranscribing
                 ? 'bg-neon-green text-pure-black hover:bg-neon-green/80'
                 : 'bg-white/5 text-white/30 cursor-not-allowed'
             }`}
           >
-            {isTyping ? (
+            {isTyping || generatingImage ? (
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
