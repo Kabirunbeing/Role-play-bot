@@ -177,6 +177,11 @@ export default function Chat() {
   const handleSwipe = (e) => {
     if (!isRecording) return;
     
+    // Prevent scrolling while recording
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+    
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     currentXRef.current = clientX;
     const diff = startXRef.current - clientX;
@@ -770,20 +775,20 @@ IMPORTANT RULES:
       )}
 
       {/* Fixed Input Area - Messenger Style */}
-      <form onSubmit={handleSend} className="bg-off-black border-t border-white/10 px-4 py-3 shrink-0">
-        <div className="flex items-center space-x-2">
+      <form onSubmit={handleSend} className="bg-off-black border-t border-white/10 px-3 sm:px-4 py-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Voice Recording Button */}
           <div className="relative group flex items-center">
             {/* Cancel text that appears when swiping */}
             {isRecording && (
               <div 
-                className="absolute right-full mr-2 flex items-center transition-opacity"
+                className="absolute right-full mr-1.5 sm:mr-2 flex items-center transition-opacity pointer-events-none"
                 style={{ opacity: swipeOffset > 30 ? 1 : 0 }}
               >
-                <svg className="w-4 h-4 text-neon-pink mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-neon-pink mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span className={`text-sm font-medium ${
+                <span className={`text-xs sm:text-sm font-medium whitespace-nowrap ${
                   isCancelled ? 'text-neon-pink' : 'text-white/60'
                 }`}>
                   {isCancelled ? 'Cancelled' : 'Slide to cancel'}
@@ -800,7 +805,7 @@ IMPORTANT RULES:
               onTouchMove={handleSwipe}
               onTouchEnd={stopRecording}
               disabled={isTyping || generatingImage || isTranscribing}
-              className={`p-2.5 rounded-full transition-all shrink-0 ${
+              className={`p-2 sm:p-2.5 rounded-full transition-all shrink-0 touch-none select-none ${
                 isRecording
                   ? 'bg-neon-pink text-pure-black animate-pulse scale-110'
                   : isTranscribing
@@ -809,16 +814,17 @@ IMPORTANT RULES:
               }`}
               style={{
                 transform: isRecording ? `translateX(-${swipeOffset}px) scale(1.1)` : undefined,
-                transition: 'transform 0.1s ease-out'
+                transition: 'transform 0.1s ease-out',
+                touchAction: 'none'
               }}
             >
             {isTranscribing ? (
-              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             )}
@@ -840,27 +846,27 @@ IMPORTANT RULES:
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            placeholder={isRecording ? 'Recording...' : isTranscribing ? 'Converting to text...' : `Message ${character.name}... (${imageCount}/5 images used)`}
-            className="flex-1 bg-dark-gray/50 text-pure-white placeholder-white/40 border border-white/10 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:border-neon-green/50 transition-colors"
+            placeholder={isRecording ? 'Recording...' : isTranscribing ? 'Converting to text...' : `Message ${character.name}...`}
+            className="flex-1 min-w-0 bg-dark-gray/50 text-pure-white placeholder-white/40 border border-white/10 rounded-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:border-neon-green/50 transition-colors"
             disabled={isTyping || generatingImage || isRecording || isTranscribing}
             autoFocus
           />
           <button
             type="submit"
             disabled={!inputMessage.trim() || isTyping || generatingImage || isRecording || isTranscribing}
-            className={`p-2.5 rounded-full transition-all shrink-0 ${
+            className={`p-2 sm:p-2.5 rounded-full transition-all shrink-0 ${
               inputMessage.trim() && !isTyping && !generatingImage && !isRecording && !isTranscribing
                 ? 'bg-neon-green text-pure-black hover:bg-neon-green/80'
                 : 'bg-white/5 text-white/30 cursor-not-allowed'
             }`}
           >
             {isTyping || generatingImage ? (
-              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             ) : (
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
               </svg>
             )}
