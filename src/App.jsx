@@ -10,7 +10,6 @@ import ResetPassword from './pages/ResetPassword';
 import CreateCharacter from './pages/CreateCharacter';
 import CharacterList from './pages/CharacterList';
 import Chat from './pages/Chat';
-import Settings from './pages/Settings';
 import CharacterProfile from './pages/CharacterProfile';
 
 function App() {
@@ -53,11 +52,6 @@ function App() {
           <Route path="/chat/:characterId" element={
             <ProtectedRoute>
               <Chat />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <Layout><Settings /></Layout>
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/" replace />} />

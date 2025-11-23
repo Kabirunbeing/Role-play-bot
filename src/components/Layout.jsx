@@ -13,7 +13,6 @@ export default function Layout({ children }) {
     { path: '/', label: 'Home' },
     { path: '/create', label: 'Create' },
     { path: '/characters', label: 'Characters' },
-    { path: '/settings', label: 'Settings' },
   ];
 
   const handleSignOut = async () => {

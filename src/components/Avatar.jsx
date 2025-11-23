@@ -9,11 +9,11 @@ export default function Avatar({ character, size = 'md', className = '' }) {
 
   const sizeClass = sizes[size] || sizes.md;
 
-  if (character.customImage) {
+  if (character.image_url) {
     return (
       <div className={`${sizeClass} rounded-lg overflow-hidden bg-dark-gray flex-shrink-0 ${className}`}>
         <img 
-          src={character.customImage} 
+          src={character.image_url} 
           alt={character.name}
           className="w-full h-full object-cover"
         />
