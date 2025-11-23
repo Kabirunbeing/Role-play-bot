@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase, getGroqKey } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import Groq from 'groq-sdk';
+import { CHARACTER_TEMPLATES } from '../lib/characterTemplates';
 
 const PERSONALITY_TYPES = [
   { value: 'friendly', label: 'Friendly', description: 'Warm and supportive' },
@@ -22,7 +23,7 @@ export default function CreateCharacter() {
   const { user } = useAuth();
   const { characterId } = useParams();
   const isEditMode = Boolean(characterId);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     personality: 'friendly',
@@ -39,6 +40,7 @@ export default function CreateCharacter() {
   const [characterCount, setCharacterCount] = useState(0);
   const [checkingLimit, setCheckingLimit] = useState(true);
   const [generatingBackstory, setGeneratingBackstory] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
     if (isEditMode) {
@@ -69,7 +71,7 @@ export default function CreateCharacter() {
           gender: data.gender || '',
           imageUrl: data.image_url || '',
         });
-        
+
         if (data.image_url) {
           setImagePreview(data.image_url);
         }
@@ -92,7 +94,7 @@ export default function CreateCharacter() {
       if (error) throw error;
 
       setCharacterCount(data.length);
-      
+
       if (data.length >= 2) {
         setErrors({ limit: 'You have reached the maximum limit of 2 characters. Please delete a character to create a new one.' });
       }
@@ -106,10 +108,29 @@ export default function CreateCharacter() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
+  };
+
+  const handleTemplateSelect = (template) => {
+    setFormData({
+      name: template.name,
+      personality: template.personality,
+      backstory: template.backstory,
+      age: template.age,
+      gender: template.gender,
+      imageUrl: template.imageUrl,
+    });
+
+    if (template.imageUrl) {
+      setImagePreview(template.imageUrl);
+      setImageFile(null);
+    }
+
+    setShowTemplates(false);
+    setErrors({});
   };
 
   const handleImageUpload = (e) => {
@@ -119,7 +140,7 @@ export default function CreateCharacter() {
         setErrors((prev) => ({ ...prev, image: 'Please upload a valid image file' }));
         return;
       }
-      
+
       if (file.size > 5 * 1024 * 1024) {
         setErrors((prev) => ({ ...prev, image: 'Image must be less than 5MB' }));
         return;
@@ -137,9 +158,9 @@ export default function CreateCharacter() {
 
   const generateBackstory = async () => {
     if (!formData.name || !formData.personality) {
-      setErrors((prev) => ({ 
-        ...prev, 
-        backstory: 'Please enter a character name and select a personality first' 
+      setErrors((prev) => ({
+        ...prev,
+        backstory: 'Please enter a character name and select a personality first'
       }));
       return;
     }
@@ -149,7 +170,7 @@ export default function CreateCharacter() {
 
     try {
       const { apiKey, error: keyError } = await getGroqKey();
-      
+
       if (keyError || !apiKey) {
         throw new Error('Failed to get API key');
       }
@@ -192,7 +213,7 @@ Write the backstory now:`;
       });
 
       const generatedBackstory = completion.choices[0]?.message?.content?.trim();
-      
+
       if (generatedBackstory) {
         setFormData(prev => ({ ...prev, backstory: generatedBackstory }));
       } else {
@@ -200,9 +221,9 @@ Write the backstory now:`;
       }
     } catch (error) {
       console.error('Error generating backstory:', error);
-      setErrors((prev) => ({ 
-        ...prev, 
-        backstory: 'Failed to generate backstory. Please try again or write one manually.' 
+      setErrors((prev) => ({
+        ...prev,
+        backstory: 'Failed to generate backstory. Please try again or write one manually.'
       }));
     } finally {
       setGeneratingBackstory(false);
@@ -211,7 +232,7 @@ Write the backstory now:`;
 
   const validate = () => {
     const newErrors = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Character name is required';
     } else if (formData.name.trim().length < 2) {
@@ -234,12 +255,12 @@ Write the backstory now:`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!isEditMode && characterCount >= 2) {
       setErrors({ limit: 'You have reached the maximum limit of 2 characters. Please delete a character to create a new one.' });
       return;
     }
-    
+
     if (!validate()) return;
 
     setLoading(true);
@@ -331,6 +352,82 @@ Write the backstory now:`;
         )}
       </div>
 
+      {!isEditMode && (
+        <div className="mb-8 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setShowTemplates(true)}
+            className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-neon-purple/20 to-neon-pink/20 border border-neon-purple/50 hover:border-neon-purple rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-neon-purple/20"
+          >
+            <span className="text-xl">✨</span>
+            <div className="text-left">
+              <p className="text-sm font-bold text-pure-white group-hover:text-neon-purple transition-colors">
+                Choose a Template
+              </p>
+              <p className="text-[10px] text-white/50">
+                Start with a pre-made character
+              </p>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Templates Modal */}
+      {showTemplates && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-dark-gray border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between bg-black/20">
+              <div>
+                <h2 className="text-2xl font-display font-bold text-pure-white">Select a Template</h2>
+                <p className="text-white/50 text-sm">Choose a character to start your journey</p>
+              </div>
+              <button
+                onClick={() => setShowTemplates(false)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/50 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-4">
+              {CHARACTER_TEMPLATES.map((template) => (
+                <button
+                  key={template.id}
+                  onClick={() => handleTemplateSelect(template)}
+                  className="flex gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-neon-green/50 hover:shadow-lg hover:shadow-neon-green/10 transition-all duration-300 text-left group"
+                >
+                  <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-black/50 border border-white/10">
+                    <img
+                      src={template.imageUrl}
+                      alt={template.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-bold text-pure-white truncate group-hover:text-neon-green transition-colors">
+                        {template.name}
+                      </h3>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/70">
+                        {template.personality}
+                      </span>
+                    </div>
+                    <p className="text-xs text-white/50 mb-2">
+                      {template.gender} • {template.age} years
+                    </p>
+                    <p className="text-xs text-white/70 line-clamp-3 leading-relaxed">
+                      {template.backstory}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {errors.load && (
         <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
           <div className="flex items-start gap-3">
@@ -379,14 +476,14 @@ Write the backstory now:`;
           <label className="block text-xs sm:text-sm font-bold text-pure-white mb-3 uppercase tracking-wider">
             Character Image
           </label>
-          
+
           <div className="flex flex-col items-center gap-4">
             {imagePreview ? (
               <div className="relative">
                 <div className="w-48 h-48 rounded-lg overflow-hidden border-2 border-neon-green shadow-lg shadow-neon-green/50">
-                  <img 
-                    src={imagePreview} 
-                    alt="Character preview" 
+                  <img
+                    src={imagePreview}
+                    alt="Character preview"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -420,7 +517,7 @@ Write the backstory now:`;
                 </div>
               </label>
             )}
-            
+
             {!imagePreview && (
               <div className="w-full">
                 <p className="text-sm text-white/60 mb-2 text-center">Or paste image URL:</p>
@@ -434,7 +531,7 @@ Write the backstory now:`;
                 />
               </div>
             )}
-            
+
             {errors.image && (
               <p className="text-sm text-neon-pink font-medium">{errors.image}</p>
             )}
@@ -511,11 +608,10 @@ Write the backstory now:`;
                 key={type.value}
                 type="button"
                 onClick={() => setFormData((prev) => ({ ...prev, personality: type.value }))}
-                className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 text-left ${
-                  formData.personality === type.value
-                    ? 'border-neon-green bg-neon-green/10 shadow-lg shadow-neon-green/50'
-                    : 'border-white/10 bg-dark-gray hover:border-white/30'
-                }`}
+                className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 text-left ${formData.personality === type.value
+                  ? 'border-neon-green bg-neon-green/10 shadow-lg shadow-neon-green/50'
+                  : 'border-white/10 bg-dark-gray hover:border-white/30'
+                  }`}
               >
                 <p className="font-bold text-pure-white text-sm sm:text-base mb-0.5 sm:mb-1">{type.label}</p>
                 <p className="text-[10px] sm:text-xs text-white/60">{type.description}</p>
@@ -551,7 +647,7 @@ Write the backstory now:`;
                   <span className="text-xs font-semibold text-neon-cyan">AI Generate</span>
                 </>
               )}
-              
+
               {/* Tooltip */}
               {!generatingBackstory && (
                 <div className="absolute right-0 top-full mt-2 w-48 px-3 py-2 bg-dark-gray border border-neon-cyan/30 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 shadow-lg shadow-neon-cyan/20">
@@ -599,8 +695,8 @@ Write the backstory now:`;
             </svg>
             Cancel
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn-primary sm:w-auto"
             disabled={loading || (!isEditMode && characterCount >= 2)}
           >

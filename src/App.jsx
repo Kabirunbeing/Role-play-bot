@@ -11,6 +11,7 @@ import CreateCharacter from './pages/CreateCharacter';
 import CharacterList from './pages/CharacterList';
 import Chat from './pages/Chat';
 import CharacterProfile from './pages/CharacterProfile';
+import GenerateAnime from './pages/GenerateAnime';
 
 function App() {
   return (
@@ -22,7 +23,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          
+
           {/* Protected routes */}
           <Route path="/" element={
             <ProtectedRoute>
@@ -37,6 +38,11 @@ function App() {
           <Route path="/edit/:characterId" element={
             <ProtectedRoute>
               <Layout><CreateCharacter /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/generate-anime" element={
+            <ProtectedRoute>
+              <Layout><GenerateAnime /></Layout>
             </ProtectedRoute>
           } />
           <Route path="/characters" element={
