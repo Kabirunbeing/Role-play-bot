@@ -95,8 +95,8 @@ export default function CreateCharacter() {
 
       setCharacterCount(data.length);
 
-      if (data.length >= 2) {
-        setErrors({ limit: 'You have reached the maximum limit of 2 characters. Please delete a character to create a new one.' });
+      if (data.length >= 5) {
+        setErrors({ limit: 'You have reached the maximum limit of 5 characters. Please delete a character to create a new one.' });
       }
     } catch (error) {
       console.error('Error checking character limit:', error);
@@ -256,8 +256,8 @@ Write the backstory now:`;
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!isEditMode && characterCount >= 2) {
-      setErrors({ limit: 'You have reached the maximum limit of 2 characters. Please delete a character to create a new one.' });
+    if (!isEditMode && characterCount >= 5) {
+      setErrors({ limit: 'You have reached the maximum limit of 5 characters. Please delete a character to create a new one.' });
       return;
     }
 
@@ -345,8 +345,8 @@ Write the backstory now:`;
         {!isEditMode && (
           <div className="mt-3 sm:mt-4 inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-dark-gray/50 border border-white/10 rounded-lg">
             <span className="text-white/50 text-xs sm:text-sm">Characters:</span>
-            <span className={`font-bold text-xs sm:text-sm ${characterCount >= 2 ? 'text-red-400' : 'text-neon-green'}`}>
-              {characterCount}/2
+            <span className={`font-bold text-xs sm:text-sm ${characterCount >= 5 ? 'text-red-400' : 'text-neon-green'}`}>
+              {characterCount}/5
             </span>
           </div>
         )}
@@ -698,7 +698,7 @@ Write the backstory now:`;
           <button
             type="submit"
             className="btn-primary sm:w-auto"
-            disabled={loading || (!isEditMode && characterCount >= 2)}
+            disabled={loading || (!isEditMode && characterCount >= 5)}
           >
             {loading ? (
               <>

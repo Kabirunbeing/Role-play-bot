@@ -25,7 +25,7 @@ export async function getGroqKey() {
 // Delete Groq API key for current user
 export async function deleteGroqKey() {
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     return { error: new Error('User not authenticated') }
   }
@@ -34,6 +34,6 @@ export async function deleteGroqKey() {
     .from('user_api_keys')
     .delete()
     .eq('user_id', user.id)
-  
+
   return { error }
 }

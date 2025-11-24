@@ -1,89 +1,51 @@
 # Role Play Bot
 
-Full-stack AI character roleplay application with authentication and real-time conversations powered by Groq's Llama 3.3 70B model.
-
-## Tech Stack
-
-**Frontend**
-- React 19 with Vite 7
-- Tailwind CSS (neon cyberpunk theme)
-- Zustand for state management
-- React Router DOM 6
-
-**Backend**
-- Supabase (PostgreSQL database)
-- Supabase Auth (email/password authentication)
-- Row Level Security policies
-
-**AI**
-- Groq Cloud API
-- Llama 3.3 70B Versatile model
-- 30 requests per minute free tier
+A full-stack AI character roleplay application featuring authentic anime character generation, custom character creation, and real-time conversations powered by Groq's Llama 3.3 70B model.
 
 ## Features
 
-- User authentication with signup/login
-- Create custom characters with personalities and backstories
-- Real-time AI chat powered by Groq
-- Secure API key storage in backend
-- Persistent chat history
-- Character management (create, edit, delete)
-- Protected routes for authenticated users
+### 🎭 Character Creation
+- **Authentic Anime Generator**: 
+  - Generate characters with canon-accurate personalities and backstories.
+  - Fetches real character images via Jikan API (MyAnimeList) when a name is provided.
+  - Rate limited to 7 generations per 5 hours.
+- **Manual Creator**: 
+  - Design custom characters with detailed traits.
+  - AI-powered backstory generator.
+  - Choose from pre-made templates.
+- **Limit**: Save up to 5 unique characters per user.
+
+### 💬 Immersive Chat
+- Real-time AI conversations powered by Groq (Llama 3.3 70B).
+- Persistent chat history.
+- Context-aware responses based on character personality and backstory.
+
+### 🔐 Security & Tech
+- **Frontend**: React 19, Vite, TailwindCSS (Cyberpunk Theme).
+- **Backend**: Supabase (Auth, Database, RLS).
+- **AI**: Groq Cloud API.
 
 ## Setup
 
-1. Clone the repository
-```bash
-git clone https://github.com/Kabirunbeing/Role-play-bot.git
-cd Role-play-bot
-```
+1. **Clone & Install**
+   ```bash
+   git clone https://github.com/Kabirunbeing/Role-play-bot.git
+   cd Role-play-bot
+   npm install
+   ```
 
-2. Install dependencies
-```bash
-npm install
-```
+2. **Environment Variables**
+   Create a `.env` file:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-3. Create `.env` file with your credentials
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_GROQ_API_KEY=your_groq_api_key
-```
-
-4. Set up Supabase database
-```sql
-CREATE TABLE user_api_keys (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users NOT NULL,
-  groq_api_key TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-ALTER TABLE user_api_keys ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own API keys" ON user_api_keys
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own API keys" ON user_api_keys
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own API keys" ON user_api_keys
-  FOR UPDATE USING (auth.uid() = user_id);
-```
-
-5. Run development server
-```bash
-npm run dev
-```
-
-## Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
+3. **Run Locally**
+   ```bash
+   npm run dev
+   ```
 
 ## License
 
 MIT
-

@@ -40,10 +40,61 @@ export default function GenerateAnime() {
         genre: 'Shonen (Action/Adventure)',
         archetype: 'The Chosen One',
         gender: 'Random',
-        name: '' // Optional custom name
+        name: '', // Optional custom name
+        animeName: '' // Optional anime name
     });
 
+    const [rateLimit, setRateLimit] = useState({ remaining: 7, resetTime: null });
+
+    // Check rate limit on load
+    useState(() => {
+        const checkLimit = () => {
+            const stored = localStorage.getItem('anime_gen_limit');
+            if (!stored) return;
+
+            const { count, resetTime } = JSON.parse(stored);
+            if (Date.now() > resetTime) {
+                localStorage.removeItem('anime_gen_limit');
+                setRateLimit({ remaining: 7, resetTime: null });
+            } else {
+                setRateLimit({ remaining: Math.max(0, 7 - count), resetTime });
+            }
+        };
+        checkLimit();
+        // Set an interval to check for reset every minute
+        const interval = setInterval(checkLimit, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const updateUsage = () => {
+        const stored = localStorage.getItem('anime_gen_limit');
+        let data = stored ? JSON.parse(stored) : { count: 0, resetTime: Date.now() + 5 * 60 * 60 * 1000 };
+
+        // If expired, reset
+        if (Date.now() > data.resetTime) {
+            data = { count: 0, resetTime: Date.now() + 5 * 60 * 60 * 1000 };
+        }
+
+        data.count += 1;
+        localStorage.setItem('anime_gen_limit', JSON.stringify(data));
+        setRateLimit({ remaining: Math.max(0, 7 - data.count), resetTime: data.resetTime });
+    };
+
     const generateCharacter = async () => {
+        if (rateLimit.remaining <= 0) {
+            const minutesLeft = Math.ceil((rateLimit.resetTime - Date.now()) / 60000);
+            const hours = Math.floor(minutesLeft / 60);
+            const mins = minutesLeft % 60;
+            setError(`Daily limit reached. Credits reset in ${hours}h ${mins}m.`);
+            return;
+        }
+
+        if (!options.name || !options.name.trim()) {
+            setError('Please enter a character name.');
+            return;
+        }
+
+        updateUsage(); // Deduct credit immediately
         setLoading(true);
         setError('');
         setGeneratedCharacter(null);
@@ -62,7 +113,26 @@ export default function GenerateAnime() {
             }
 
             // 2. Prepare Image Fetch Promise
+            // 2. Prepare Image Fetch Promise
             const imagePromise = (async () => {
+                // Try to fetch specific character image if name is provided
+                if (options.name && options.name.trim()) {
+                    try {
+                        let query = options.name;
+                        if (options.animeName && options.animeName.trim()) {
+                            query += ` ${options.animeName}`;
+                        }
+                        const response = await fetch(`https://api.jikan.moe/v4/characters?q=${encodeURIComponent(query)}&limit=1`);
+                        const data = await response.json();
+                        if (data.data && data.data.length > 0) {
+                            return data.data[0].images.jpg.image_url;
+                        }
+                    } catch (e) {
+                        console.error('Jikan fetch failed:', e);
+                        // Continue to fallback
+                    }
+                }
+
                 try {
                     let category = 'waifu';
                     if (selectedGender === 'Male') {
@@ -88,6 +158,8 @@ export default function GenerateAnime() {
       - Archetype: ${options.archetype}
       - Gender: ${selectedGender}
       ${options.name ? `- Name: ${options.name}` : ''}
+      ${options.animeName ? `- Anime Source: ${options.animeName}` : ''}
+      (If this is a known character, try to match their canon personality and backstory from the specified anime if provided)
 
       Return the response in strictly valid JSON format with the following fields:
       {
@@ -124,7 +196,12 @@ export default function GenerateAnime() {
             characterData.imageUrl = imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(characterData.name)}&background=random&size=256`;
 
             // Ensure gender matches what we decided
-            characterData.gender = selectedGender;
+            // If user explicitly picked a gender, enforce it.
+            // If user picked Random, and we have a name, trust the AI (Canon).
+            // If user picked Random, and no name, enforce the random choice we made (to match the image category).
+            if (options.gender !== 'Random' || !options.name) {
+                characterData.gender = selectedGender;
+            }
 
             setGeneratedCharacter(characterData);
         } catch (err) {
@@ -145,8 +222,8 @@ export default function GenerateAnime() {
                 .select('id')
                 .eq('user_id', user.id);
 
-            if (existing && existing.length >= 2) {
-                setError('You have reached the maximum limit of 2 characters. Please delete one to save this new one.');
+            if (existing && existing.length >= 5) {
+                setError('You have reached the maximum limit of 5 characters. Please delete one to save this new one.');
                 setLoading(false);
                 return;
             }
@@ -182,11 +259,19 @@ export default function GenerateAnime() {
         <div className="max-w-4xl mx-auto fade-in">
             <div className="text-center mb-10">
                 <h1 className="text-4xl md:text-5xl font-display font-bold text-pure-white mb-4">
-                    Anime Character <span className="text-neon-pink">Generator</span>
+                    Authentic Anime <span className="text-neon-pink">Character Generator</span>
                 </h1>
-                <p className="text-white/60 text-lg">
-                    Let AI craft your next protagonist (or villain)
+                <p className="text-white/60 text-lg mb-2">
+                    Enter a name to generate an <strong>authentic</strong> anime character with real images and canon details.
                 </p>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-neon-pink">
+                    <span>⚡ Credits: {rateLimit.remaining}/7</span>
+                    {rateLimit.remaining < 7 && (
+                        <span className="text-white/40">
+                            (Resets in {Math.ceil((rateLimit.resetTime - Date.now()) / (1000 * 60 * 60))}h)
+                        </span>
+                    )}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -198,6 +283,34 @@ export default function GenerateAnime() {
                         </h2>
 
                         <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-white/70 uppercase mb-2">Character Name <span className="text-neon-pink">*</span></label>
+                                <input
+                                    type="text"
+                                    value={options.name}
+                                    onChange={(e) => setOptions({ ...options, name: e.target.value })}
+                                    placeholder="e.g. Naruto Uzumaki"
+                                    className="input-field text-sm"
+                                />
+                                <p className="text-[10px] text-white/40 mt-1">
+                                    Enter a known character name to fetch their real image and details.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-white/70 uppercase mb-2">Anime Name (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={options.animeName}
+                                    onChange={(e) => setOptions({ ...options, animeName: e.target.value })}
+                                    placeholder="e.g. Naruto Shippuden"
+                                    className="input-field text-sm"
+                                />
+                                <p className="text-[10px] text-white/40 mt-1">
+                                    Specify the anime to ensure we find the right character.
+                                </p>
+                            </div>
+
                             <div>
                                 <label className="block text-xs font-bold text-white/70 uppercase mb-2">Genre</label>
                                 <select
@@ -234,17 +347,7 @@ export default function GenerateAnime() {
                                 </select>
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-bold text-white/70 uppercase mb-2">Name (Optional)</label>
-                                <input
-                                    type="text"
-                                    value={options.name}
-                                    onChange={(e) => setOptions({ ...options, name: e.target.value })}
-                                    placeholder="Leave empty for random"
-                                    className="input-field text-sm"
-                                >
-                                </input>
-                            </div>
+
 
                             <button
                                 onClick={generateCharacter}
@@ -305,14 +408,8 @@ export default function GenerateAnime() {
                                         <img
                                             src={generatedCharacter.imageUrl}
                                             alt={generatedCharacter.name}
-                                            className="w-full h-full object-cover opacity-50 group-hover:opacity-75 transition-opacity"
+                                            className="w-full h-full object-cover transition-opacity"
                                         />
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <p className="text-xs text-center px-4 text-white/60">
-                                                (AI Generated Profile)<br />
-                                                Image is a placeholder
-                                            </p>
-                                        </div>
                                     </div>
                                     <div className="mt-4 text-center">
                                         <span className="inline-block px-3 py-1 rounded-full bg-neon-pink/10 border border-neon-pink/30 text-neon-pink text-xs font-bold uppercase tracking-wider">
