@@ -48,8 +48,8 @@ export default function Layout({ children }) {
                   key={link.path}
                   to={link.path}
                   className={`px-2 xl:px-3 py-2 rounded-lg text-xs xl:text-sm font-medium uppercase tracking-wide transition-all duration-300 ${location.pathname === link.path
-                      ? 'bg-neon-green text-pure-black font-bold shadow-neon-green'
-                      : 'text-pure-white hover:bg-white/5 hover:text-neon-green'
+                    ? 'bg-neon-green text-pure-black font-bold shadow-neon-green'
+                    : 'text-pure-white hover:bg-white/5 hover:text-neon-green'
                     }`}
                 >
                   {link.label}
@@ -93,19 +93,23 @@ export default function Layout({ children }) {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 rounded-lg text-pure-white hover:bg-white/5 hover:text-neon-green transition-all relative group"
+                className="lg:hidden p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-neon-green/50 transition-all duration-300 relative group"
                 aria-label="Toggle menu"
               >
-                <svg className={`w-6 h-6 transition-transform duration-300 ${mobileMenuOpen ? 'rotate-180' : 'group-hover:rotate-45'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {mobileMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                  ) : (
-                    <>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </>
-                  )}
-                </svg>
+                <div className="w-5 h-4 sm:w-6 sm:h-5 flex flex-col justify-center items-center gap-1.5 sm:gap-2 relative">
+                  <span
+                    className={`w-full h-0.5 bg-gradient-to-r from-neon-green to-neon-cyan rounded-full transition-all duration-300 ease-in-out ${mobileMenuOpen
+                      ? 'rotate-45 translate-y-1 sm:translate-y-1.25 shadow-[0_0_8px_rgba(0,255,65,0.6)]'
+                      : 'group-hover:shadow-[0_0_4px_rgba(0,255,65,0.4)]'
+                      }`}
+                  />
+                  <span
+                    className={`w-full h-0.5 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-full transition-all duration-300 ease-in-out ${mobileMenuOpen
+                      ? '-rotate-45 -translate-y-1 sm:-translate-y-1.25 shadow-[0_0_8px_rgba(0,255,65,0.6)]'
+                      : 'group-hover:shadow-[0_0_4px_rgba(0,255,65,0.4)]'
+                      }`}
+                  />
+                </div>
               </button>
             </div>
           </div>
@@ -119,8 +123,8 @@ export default function Layout({ children }) {
                   to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`block px-4 py-3 rounded-lg text-sm font-medium uppercase tracking-wide transition-all duration-300 ${location.pathname === link.path
-                      ? 'bg-neon-green text-pure-black font-bold shadow-neon-green'
-                      : 'text-pure-white hover:bg-white/5 hover:text-neon-green'
+                    ? 'bg-neon-green text-pure-black font-bold shadow-neon-green'
+                    : 'text-pure-white hover:bg-white/5 hover:text-neon-green'
                     }`}
                 >
                   {link.label}
@@ -173,77 +177,110 @@ export default function Layout({ children }) {
       </main>
 
       {/* Footer */}
-      <footer className="bg-off-black border-t border-white/10 py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <footer className="relative bg-off-black border-t border-white/10 py-12 sm:py-16 overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-neon-green/5 rounded-full blur-[100px]"></div>
+          <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-neon-purple/5 rounded-full blur-[100px]"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 mb-10 sm:mb-12">
             {/* About Section */}
-            <div>
-              <h3 className="text-neon-green font-bold text-lg mb-3 flex items-center gap-2">
-                <span className="text-2xl">🎭</span>
-                RolePlayForge
-              </h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-3xl">🎭</span>
+                <h3 className="text-xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-neon-cyan">
+                  RolePlayForge
+                </h3>
+              </div>
               <p className="text-white/60 text-sm leading-relaxed">
                 Create immersive AI characters and engage in dynamic roleplay conversations powered by advanced language models.
               </p>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-white font-semibold mb-3">Quick Links</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="text-white/60 hover:text-neon-cyan transition-colors">Features</a>
-                </li>
-                <li>
-                  <a href="#" className="text-white/60 hover:text-neon-cyan transition-colors">Privacy Policy</a>
-                </li>
-                <li>
-                  <a href="#" className="text-white/60 hover:text-neon-cyan transition-colors">Terms of Service</a>
-                </li>
-                <li>
-                  <a href="#" className="text-white/60 hover:text-neon-cyan transition-colors">Contact</a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Tech Stack */}
-            <div>
-              <h4 className="text-white font-semibold mb-3">Powered By</h4>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-dark-gray border border-neon-green/20 text-neon-green text-xs rounded-full">
-                  React
-                </span>
-                <span className="px-3 py-1 bg-dark-gray border border-neon-cyan/20 text-neon-cyan text-xs rounded-full">
-                  Supabase
-                </span>
-                <span className="px-3 py-1 bg-dark-gray border border-neon-pink/20 text-neon-pink text-xs rounded-full">
-                  Groq AI
-                </span>
-                <span className="px-3 py-1 bg-dark-gray border border-neon-yellow/20 text-neon-yellow text-xs rounded-full">
-                  Tailwind
-                </span>
-              </div>
-              <div className="mt-4">
-                <a href="https://github.com/Kabirunbeing/Role-play-bot" target="_blank" rel="noopener noreferrer"
-                  className="text-white/40 hover:text-neon-green transition-colors inline-block">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-3 pt-2">
+                <a
+                  href="https://github.com/Kabirunbeing/Role-play-bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group p-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-neon-green/50 rounded-lg transition-all duration-300"
+                  aria-label="GitHub"
+                >
+                  <svg className="w-5 h-5 text-white/60 group-hover:text-neon-green transition-colors" fill="currentColor" viewBox="0 0 24 24">
                     <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
                   </svg>
                 </a>
               </div>
             </div>
+
+            {/* Quick Links */}
+            <div className="space-y-4">
+              <h4 className="text-white font-bold text-base mb-4 flex items-center gap-2">
+                <span className="w-1 h-5 bg-gradient-to-b from-neon-green to-neon-cyan rounded-full"></span>
+                Quick Links
+              </h4>
+              <ul className="space-y-3 text-sm">
+                <li>
+                  <a href="#" className="group flex items-center gap-2 text-white/60 hover:text-neon-green transition-all duration-200">
+                    <svg className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="group flex items-center gap-2 text-white/60 hover:text-neon-green transition-all duration-200">
+                    <svg className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="group flex items-center gap-2 text-white/60 hover:text-neon-green transition-all duration-200">
+                    <svg className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                    Terms of Service
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="group flex items-center gap-2 text-white/60 hover:text-neon-green transition-all duration-200">
+                    <svg className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                    Contact
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Tech Stack */}
+            <div className="space-y-4">
+              <h4 className="text-white font-bold text-base mb-4 flex items-center gap-2">
+                <span className="w-1 h-5 bg-gradient-to-b from-neon-cyan to-neon-purple rounded-full"></span>
+                Powered By
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                <span className="group px-3 py-1.5 bg-white/5 backdrop-blur-sm border border-neon-green/20 hover:border-neon-green/50 text-neon-green text-xs font-medium rounded-full transition-all duration-300 hover:shadow-[0_0_10px_rgba(0,255,65,0.2)]">
+                  React
+                </span>
+                <span className="group px-3 py-1.5 bg-white/5 backdrop-blur-sm border border-neon-cyan/20 hover:border-neon-cyan/50 text-neon-cyan text-xs font-medium rounded-full transition-all duration-300 hover:shadow-[0_0_10px_rgba(0,255,255,0.2)]">
+                  Supabase
+                </span>
+                <span className="group px-3 py-1.5 bg-white/5 backdrop-blur-sm border border-neon-pink/20 hover:border-neon-pink/50 text-neon-pink text-xs font-medium rounded-full transition-all duration-300 hover:shadow-[0_0_10px_rgba(255,0,255,0.2)]">
+                  Groq AI
+                </span>
+                <span className="group px-3 py-1.5 bg-white/5 backdrop-blur-sm border border-neon-yellow/20 hover:border-neon-yellow/50 text-neon-yellow text-xs font-medium rounded-full transition-all duration-300 hover:shadow-[0_0_10px_rgba(255,255,0,0.2)]">
+                  Tailwind
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Bottom Bar */}
-          <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-white/40 text-sm font-mono">
-              © 2025 RolePlayForge. All rights reserved.
+          <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-white/40 text-xs sm:text-sm font-medium">
+              © 2025 <span className="text-neon-green">RolePlayForge</span>. All rights reserved.
             </p>
-            <div className="flex items-center gap-2">
-              <span className="text-neon-green text-xs font-bold">■</span>
-              <span className="text-neon-cyan text-xs font-bold">■</span>
-              <span className="text-neon-yellow text-xs font-bold">■</span>
-              <span className="text-neon-pink text-xs font-bold">■</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-neon-green rounded-full animate-pulse shadow-[0_0_6px_rgba(0,255,65,0.6)]"></span>
+                <span className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse shadow-[0_0_6px_rgba(0,255,255,0.6)]" style={{ animationDelay: '0.2s' }}></span>
+                <span className="w-2 h-2 bg-neon-purple rounded-full animate-pulse shadow-[0_0_6px_rgba(128,0,255,0.6)]" style={{ animationDelay: '0.4s' }}></span>
+                <span className="w-2 h-2 bg-neon-pink rounded-full animate-pulse shadow-[0_0_6px_rgba(255,0,255,0.6)]" style={{ animationDelay: '0.6s' }}></span>
+              </div>
             </div>
           </div>
         </div>

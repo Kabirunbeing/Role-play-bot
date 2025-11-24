@@ -22,26 +22,26 @@ export default function StatsCard() {
         Your Statistics
       </h3>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="text-center p-4 bg-dark-gray rounded-lg border border-white/10 hover:border-neon-green/50 transition-all">
-          <p className="text-4xl font-bold text-neon-green mb-1">{stats.totalCharacters}</p>
-          <p className="text-xs text-white/60 uppercase tracking-wider">Characters</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <div className="text-center p-3 sm:p-4 bg-dark-gray rounded-lg border border-white/10 hover:border-neon-green/50 transition-all">
+          <p className="text-2xl sm:text-4xl font-bold text-neon-green mb-1">{stats.totalCharacters}</p>
+          <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider">Characters</p>
         </div>
-        <div className="text-center p-4 bg-dark-gray rounded-lg border border-white/10 hover:border-neon-cyan/50 transition-all">
-          <p className="text-4xl font-bold text-neon-cyan mb-1">{stats.totalMessages}</p>
-          <p className="text-xs text-white/60 uppercase tracking-wider">Messages</p>
+        <div className="text-center p-3 sm:p-4 bg-dark-gray rounded-lg border border-white/10 hover:border-neon-cyan/50 transition-all">
+          <p className="text-2xl sm:text-4xl font-bold text-neon-cyan mb-1">{stats.totalMessages}</p>
+          <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider">Messages</p>
         </div>
-        <div className="text-center p-4 bg-dark-gray rounded-lg border border-white/10 hover:border-neon-yellow/50 transition-all">
-          <p className="text-4xl font-bold text-neon-yellow mb-1">
+        <div className="text-center p-3 sm:p-4 bg-dark-gray rounded-lg border border-white/10 hover:border-neon-yellow/50 transition-all">
+          <p className="text-2xl sm:text-4xl font-bold text-neon-yellow mb-1">
             {Object.keys(stats.personalities).length}
           </p>
-          <p className="text-xs text-white/60 uppercase tracking-wider">Personalities</p>
+          <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider">Personalities</p>
         </div>
-        <div className="text-center p-4 bg-dark-gray rounded-lg border border-white/10 hover:border-neon-pink/50 transition-all">
-          <p className="text-4xl font-bold text-neon-pink mb-1">
+        <div className="text-center p-3 sm:p-4 bg-dark-gray rounded-lg border border-white/10 hover:border-neon-pink/50 transition-all">
+          <p className="text-2xl sm:text-4xl font-bold text-neon-pink mb-1">
             {stats.mostActiveCharacter ? '1' : '—'}
           </p>
-          <p className="text-xs text-white/60 uppercase tracking-wider">Most Active</p>
+          <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider">Most Active</p>
         </div>
       </div>
 

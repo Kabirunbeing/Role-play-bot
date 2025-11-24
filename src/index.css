@@ -8,90 +8,70 @@
   body {
     @apply bg-pure-black text-pure-white font-body antialiased;
   }
-  
+
   * {
     @apply border-white/10;
   }
 }
 
 @layer components {
+
   /* Primary buttons with vibrant colors */
   .btn-primary {
-    @apply px-5 py-2.5 bg-neon-green text-pure-black font-semibold rounded-lg 
-           transition-all duration-200 hover:bg-neon-green/90 hover:shadow-lg hover:shadow-neon-green/30
-           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
-           flex items-center justify-center gap-2;
+    @apply px-5 py-2.5 bg-neon-green text-pure-black font-semibold rounded-lg transition-all duration-200 hover:bg-neon-green/90 hover:shadow-lg hover:shadow-neon-green/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2;
   }
-  
+
   .btn-secondary {
-    @apply px-5 py-2.5 bg-dark-gray text-pure-white font-medium rounded-lg border border-white/20
-           transition-all duration-200 hover:bg-white/5 hover:border-white/30
-           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
-           flex items-center justify-center gap-2;
+    @apply px-5 py-2.5 bg-dark-gray text-pure-white font-medium rounded-lg border border-white/20 transition-all duration-200 hover:bg-white/5 hover:border-white/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2;
   }
-  
+
   .btn-outline {
-    @apply px-5 py-2.5 bg-transparent border-2 border-white/30 text-pure-white 
-           font-medium rounded-lg transition-all duration-200 
-           hover:bg-white/5 hover:border-white/50
-           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
-           flex items-center justify-center gap-2;
+    @apply px-5 py-2.5 bg-transparent border-2 border-white/30 text-pure-white font-medium rounded-lg transition-all duration-200 hover:bg-white/5 hover:border-white/50 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2;
   }
-  
+
   .btn-danger {
-    @apply px-4 py-2 bg-transparent border border-red-500/30 text-red-400 font-medium rounded-lg 
-           transition-all duration-200 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-300
-           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
-           flex items-center justify-center gap-1.5;
+    @apply px-4 py-2 bg-transparent border border-red-500/30 text-red-400 font-medium rounded-lg transition-all duration-200 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5;
   }
-  
+
   .btn-icon {
-    @apply p-2 bg-dark-gray text-white/70 rounded-lg border border-white/10
-           transition-all duration-200 hover:bg-white/5 hover:border-white/20 hover:text-white
-           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply p-2 bg-dark-gray text-white/70 rounded-lg border border-white/10 transition-all duration-200 hover:bg-white/5 hover:border-white/20 hover:text-white active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
   }
-  
+
   /* Input fields */
   .input-field {
-    @apply w-full px-4 py-3 bg-dark-gray border border-white/20 rounded-lg 
-           text-pure-white placeholder-white/40 
-           focus:outline-none focus:border-neon-cyan focus:shadow-neon-cyan
-           transition-all duration-300;
+    @apply w-full px-4 py-3 bg-dark-gray border border-white/20 rounded-lg text-pure-white placeholder-white/40 focus:outline-none focus:border-neon-cyan focus:shadow-neon-cyan transition-all duration-300;
   }
-  
+
   /* Cards */
   .card {
-    @apply bg-dark-gray border border-white/10 rounded-xl p-6
-           transition-all duration-300;
+    @apply bg-dark-gray border border-white/10 rounded-xl p-6 transition-all duration-300;
   }
-  
+
   .card-hover {
-    @apply bg-dark-gray border border-white/10 rounded-xl p-6
-           transition-all duration-300 hover:border-neon-green hover:shadow-lg
-           hover:-translate-y-1;
+    @apply bg-dark-gray border border-white/10 rounded-xl p-6 transition-all duration-300 hover:border-neon-green hover:shadow-lg hover:-translate-y-1;
   }
-  
+
   /* Neon text effects */
   .text-neon-glow {
     @apply text-neon-green;
     text-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
   }
-  
+
   /* Loading animations */
   .pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
   }
-  
+
   /* Fade in animation */
   .fade-in {
     animation: fadeIn 0.4s ease-in;
   }
-  
+
   /* Slide up animation */
   .slide-up {
     animation: slideUp 0.5s ease-out;
   }
-  
+
   /* Shimmer effect for loading states */
   .shimmer {
     background: linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
@@ -102,10 +82,13 @@
 
 /* Custom animations */
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     text-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
   }
+
   50% {
     opacity: 0.8;
     text-shadow: 0 0 20px rgba(0, 255, 65, 1);
@@ -116,6 +99,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -126,6 +110,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -136,8 +121,47 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 8s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -162,10 +186,13 @@
 
 /* Mobile optimizations */
 @media (max-width: 768px) {
-  .btn-primary, .btn-secondary, .btn-outline {
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
     @apply text-xs px-4 py-2;
   }
-  
+
   .card {
     @apply p-4;
   }
