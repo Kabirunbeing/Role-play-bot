@@ -53,9 +53,9 @@ export default function Chat() {
   const [messageToDelete, setMessageToDelete] = useState(null);
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
-  
+
   const setActiveCharacter = useStore((state) => state.setActiveCharacter);
-  
+
   const [character, setCharacter] = useState(null);
   const [allMessages, setAllMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +74,7 @@ export default function Chat() {
   const audioChunksRef = useRef([]);
   const startXRef = useRef(0);
   const currentXRef = useRef(0);
-  
+
   const messages = allMessages;
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export default function Chat() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
-      
+
       // Track initial position for swipe
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       startXRef.current = clientX;
@@ -176,19 +176,19 @@ export default function Chat() {
 
   const handleSwipe = (e) => {
     if (!isRecording) return;
-    
+
     // Prevent scrolling while recording
     if (e.cancelable) {
       e.preventDefault();
     }
-    
+
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     currentXRef.current = clientX;
     const diff = startXRef.current - clientX;
-    
+
     if (diff > 0) {
       setSwipeOffset(Math.min(diff, 120)); // Max swipe distance
-      
+
       // Cancel if swiped more than 100px to the left
       if (diff > 100 && !isCancelled) {
         setIsCancelled(true);
@@ -207,7 +207,7 @@ export default function Chat() {
     try {
       setIsTranscribing(true);
       const { apiKey, error: keyError } = await getGroqKey();
-      
+
       if (keyError || !apiKey) {
         throw new Error('Failed to get API key');
       }
@@ -255,7 +255,7 @@ export default function Chat() {
 
   const confirmDeleteMessage = async () => {
     if (!messageToDelete) return;
-    
+
     try {
       const { error } = await supabase
         .from('chat_messages')
@@ -361,9 +361,9 @@ export default function Chat() {
           .eq('id', editingMessageId);
 
         if (error) throw error;
-        
-        setAllMessages(prev => prev.map(msg => 
-          msg.id === editingMessageId 
+
+        setAllMessages(prev => prev.map(msg =>
+          msg.id === editingMessageId
             ? { ...msg, message: editText.trim(), updated_at: new Date().toISOString() }
             : msg
         ));
@@ -382,7 +382,7 @@ export default function Chat() {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    
+
     if (!inputMessage.trim() || isTyping) return;
 
     const message = inputMessage.trim();
@@ -427,7 +427,7 @@ export default function Chat() {
         .single();
 
       if (userMsgError) throw userMsgError;
-      
+
       // Add to local state immediately
       setAllMessages(prev => [...prev, userMsg]);
     } catch (error) {
@@ -436,7 +436,7 @@ export default function Chat() {
 
     // Fetch Groq API key from backend
     const { apiKey, error: keyError } = await getGroqKey();
-    
+
     if (keyError || !apiKey) {
       console.error('Failed to fetch API key from backend:', keyError);
       setAllMessages(prev => [...prev, {
@@ -452,7 +452,7 @@ export default function Chat() {
     // Generate AI response
     try {
       const groq = new Groq({ apiKey, dangerouslyAllowBrowser: true });
-      
+
       // Create character-specific prompt
       const systemPrompt = `You are ${character.name}, a ${character.personality} character. Backstory: ${character.backstory}. 
 
@@ -473,12 +473,12 @@ IMPORTANT RULES:
         max_tokens: 150,
         top_p: 0.9
       });
-      
+
       const aiResponse = chatCompletion.choices[0]?.message?.content || 'Sorry, I could not respond.';
-      
+
       // Save AI response to database
       await new Promise(resolve => setTimeout(resolve, 800)); // Typing delay
-      
+
       const { data: userData } = await supabase.auth.getUser();
       const { data: aiMsg, error: aiMsgError } = await supabase
         .from('chat_messages')
@@ -492,17 +492,17 @@ IMPORTANT RULES:
         .single();
 
       if (aiMsgError) throw aiMsgError;
-      
+
       // Add to local state
       setAllMessages(prev => [...prev, aiMsg]);
-      
+
     } catch (error) {
       console.error('Groq API error:', error);
-      
+
       // Show error message
       const { data: userData } = await supabase.auth.getUser();
       const errorMsg = 'I apologize, but I\'m having trouble responding right now. Please try again.';
-      
+
       const { data: errMsg } = await supabase
         .from('chat_messages')
         .insert([{
@@ -571,8 +571,8 @@ IMPORTANT RULES:
     <div className="fixed inset-0 bg-pure-black flex flex-col">
       {/* Fixed Header - Messenger Style */}
       <div className="bg-off-black border-b border-white/10 px-4 py-3 flex items-center space-x-3 shrink-0">
-        <Link 
-          to="/characters" 
+        <Link
+          to="/characters"
           className="p-2 hover:bg-white/5 rounded-full transition-colors"
           title="Back to characters"
         >
@@ -580,9 +580,9 @@ IMPORTANT RULES:
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </Link>
-        
+
         <Avatar character={character} size="md" />
-        
+
         <div className="flex-1 min-w-0">
           <h2 className="text-base font-semibold text-pure-white truncate">{character.name}</h2>
           <div className="flex items-center space-x-1.5">
@@ -603,7 +603,7 @@ IMPORTANT RULES:
             <p className="text-sm text-white/50 mb-6 max-w-sm">
               {character.backstory}
             </p>
-            
+
             {/* Conversation Starters */}
             {allMessages.length === 0 && (
               <div className="w-full max-w-md space-y-2">
@@ -631,11 +631,10 @@ IMPORTANT RULES:
                 className={`flex ${msg.is_user ? 'justify-end' : 'justify-start'} group`}
               >
                 <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2.5 relative ${
-                    msg.is_user
-                      ? 'bg-neon-green text-pure-black rounded-br-md'
-                      : 'bg-dark-gray/80 text-pure-white rounded-bl-md'
-                  }`}
+                  className={`max-w-[75%] rounded-2xl px-4 py-2.5 relative ${msg.is_user
+                    ? 'bg-neon-green text-pure-black rounded-br-md'
+                    : 'bg-dark-gray/80 text-pure-white rounded-bl-md'
+                    }`}
                 >
                   {/* Message Text or Edit Input */}
                   {editingMessageId === msg.id ? (
@@ -665,9 +664,9 @@ IMPORTANT RULES:
                   ) : (
                     <>
                       {msg.image_url && (
-                        <img 
-                          src={msg.image_url} 
-                          alt="Generated" 
+                        <img
+                          src={msg.image_url}
+                          alt="Generated"
                           className="w-full max-w-sm rounded-lg mb-2 border border-white/10"
                           loading="lazy"
                         />
@@ -728,7 +727,7 @@ IMPORTANT RULES:
                 </div>
               </div>
             ))}
-            
+
             {/* Generating Image Indicator */}
             {generatingImage && (
               <div className="flex justify-start">
@@ -758,7 +757,7 @@ IMPORTANT RULES:
                 </div>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </>
         )}
@@ -804,21 +803,20 @@ IMPORTANT RULES:
           <div className="relative group flex items-center">
             {/* Cancel text that appears when swiping */}
             {isRecording && (
-              <div 
+              <div
                 className="absolute right-full mr-1.5 sm:mr-2 flex items-center transition-opacity pointer-events-none"
                 style={{ opacity: swipeOffset > 30 ? 1 : 0 }}
               >
                 <svg className="w-3 h-3 sm:w-4 sm:h-4 text-neon-pink mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span className={`text-xs sm:text-sm font-medium whitespace-nowrap ${
-                  isCancelled ? 'text-neon-pink' : 'text-white/60'
-                }`}>
+                <span className={`text-xs sm:text-sm font-medium whitespace-nowrap ${isCancelled ? 'text-neon-pink' : 'text-white/60'
+                  }`}>
                   {isCancelled ? 'Cancelled' : 'Slide to cancel'}
                 </span>
               </div>
             )}
-            
+
             <button
               type="button"
               onMouseDown={startRecording}
@@ -828,42 +826,41 @@ IMPORTANT RULES:
               onTouchMove={handleSwipe}
               onTouchEnd={stopRecording}
               disabled={isTyping || generatingImage || isTranscribing}
-              className={`p-2 sm:p-2.5 rounded-full transition-all shrink-0 touch-none select-none ${
-                isRecording
-                  ? 'bg-neon-pink text-pure-black animate-pulse scale-110'
-                  : isTranscribing
+              className={`p-2 sm:p-2.5 rounded-full transition-all shrink-0 touch-none select-none ${isRecording
+                ? 'bg-neon-pink text-pure-black animate-pulse scale-110'
+                : isTranscribing
                   ? 'bg-neon-purple/30 text-neon-purple'
                   : 'bg-dark-gray/50 text-white/60 hover:bg-neon-purple/20 hover:text-neon-purple'
-              }`}
+                }`}
               style={{
                 transform: isRecording ? `translateX(-${swipeOffset}px) scale(1.1)` : undefined,
                 transition: 'transform 0.1s ease-out',
                 touchAction: 'none'
               }}
             >
-            {isTranscribing ? (
-              <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            )}
-          </button>
-          
-          {/* Tooltip on hover */}
-          {!isRecording && (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-pure-black border border-white/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-              <p className="text-xs text-white font-medium mb-0.5">🎤 Hold & Speak</p>
-              <p className="text-[10px] text-white/60">Swipe left to cancel</p>
-              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-                <div className="border-4 border-transparent border-t-pure-black"></div>
+              {isTranscribing ? (
+                <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+              )}
+            </button>
+
+            {/* Tooltip on hover */}
+            {!isRecording && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-pure-black border border-white/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                <p className="text-xs text-white font-medium mb-0.5">🎤 Hold & Speak</p>
+                <p className="text-[10px] text-white/60">Swipe left to cancel</p>
+                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
+                  <div className="border-4 border-transparent border-t-pure-black"></div>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
           <input
             type="text"
@@ -877,11 +874,10 @@ IMPORTANT RULES:
           <button
             type="submit"
             disabled={!inputMessage.trim() || isTyping || generatingImage || isRecording || isTranscribing}
-            className={`p-2 sm:p-2.5 rounded-full transition-all shrink-0 ${
-              inputMessage.trim() && !isTyping && !generatingImage && !isRecording && !isTranscribing
-                ? 'bg-neon-green text-pure-black hover:bg-neon-green/80'
-                : 'bg-white/5 text-white/30 cursor-not-allowed'
-            }`}
+            className={`p-2 sm:p-2.5 rounded-full transition-all shrink-0 ${inputMessage.trim() && !isTyping && !generatingImage && !isRecording && !isTranscribing
+              ? 'bg-neon-green text-pure-black hover:bg-neon-green/80'
+              : 'bg-white/5 text-white/30 cursor-not-allowed'
+              }`}
           >
             {isTyping || generatingImage ? (
               <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
@@ -900,7 +896,7 @@ IMPORTANT RULES:
       {/* Generating Image Modal */}
       <Modal
         isOpen={generatingImage}
-        onClose={() => {}}
+        onClose={() => { }}
         title="Generating Image"
         size="sm"
       >
@@ -916,13 +912,13 @@ IMPORTANT RULES:
                 <span className="text-xl sm:text-2xl">🎨</span>
               </div>
             </div>
-            
+
             <h3 className="text-base sm:text-lg font-semibold text-pure-white mb-1 sm:mb-2 text-center px-2">Creating your image...</h3>
             <p className="text-xs sm:text-sm text-white/60 text-center max-w-xs px-4">
               AI is generating a unique image based on your prompt
             </p>
           </div>
-          
+
           <div className="bg-neon-purple/10 border border-neon-purple/30 p-3 sm:p-4 rounded-lg">
             <p className="text-[10px] sm:text-xs text-neon-purple font-medium text-center">
               ✨ This may take a few seconds

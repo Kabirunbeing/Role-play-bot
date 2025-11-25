@@ -334,40 +334,58 @@ Write the backstory now:`;
   }
 
   return (
-    <div className="max-w-3xl mx-auto fade-in">
-      <div className="mb-6 sm:mb-8 text-center">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-pure-white mb-2">
-          {isEditMode ? 'Edit' : 'Create New'} <span className="text-neon-green">Character</span>
+    <div className="max-w-7xl mx-auto px-4 py-6 fade-in">
+      {/* Header Section */}
+      <div className="mb-8 sm:mb-12 text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-pure-white mb-3 sm:mb-4 tracking-tight">
+          {isEditMode ? (
+            <>
+              Edit <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan to-neon-blue">Character</span>
+            </>
+          ) : (
+            <>
+              Create New <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-green via-neon-cyan to-neon-blue">Character</span>
+            </>
+          )}
         </h1>
-        <p className="text-white/50 text-sm sm:text-base max-w-2xl mx-auto">
-          {isEditMode ? 'Update your character details' : 'Design a unique character with personality and depth'}
+        <p className="text-white/60 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+          {isEditMode ? 'Update your character details and bring them to life' : 'Design a unique character with personality and depth'}
         </p>
         {!isEditMode && (
-          <div className="mt-3 sm:mt-4 inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-dark-gray/50 border border-white/10 rounded-lg">
-            <span className="text-white/50 text-xs sm:text-sm">Characters:</span>
-            <span className={`font-bold text-xs sm:text-sm ${characterCount >= 5 ? 'text-red-400' : 'text-neon-green'}`}>
-              {characterCount}/5
+          <div className="mt-4 sm:mt-6 inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-dark-gray to-dark-gray/50 border border-white/10 rounded-full backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-neon-green" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+              </svg>
+              <span className="text-white/60 text-xs sm:text-sm md:text-base font-medium">Characters</span>
+            </div>
+            <div className="h-6 w-px bg-white/10"></div>
+            <span className={`font-bold text-sm sm:text-base md:text-lg ${characterCount >= 5 ? 'text-red-400' : 'text-neon-green'}`}>
+              {characterCount} / 5
             </span>
           </div>
         )}
       </div>
 
       {!isEditMode && (
-        <div className="mb-8 flex justify-center">
+        <div className="mb-10 flex justify-center">
           <button
             type="button"
             onClick={() => setShowTemplates(true)}
-            className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-neon-purple/20 to-neon-pink/20 border border-neon-purple/50 hover:border-neon-purple rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-neon-purple/20"
+            className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-neon-purple/20 via-neon-pink/20 to-neon-purple/20 border-2 border-neon-purple/40 hover:border-neon-purple rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-neon-purple/30 hover:scale-105"
           >
-            <span className="text-xl">✨</span>
+            <span className="text-xl sm:text-2xl">✨</span>
             <div className="text-left">
-              <p className="text-sm font-bold text-pure-white group-hover:text-neon-purple transition-colors">
+              <p className="text-sm sm:text-base font-bold text-pure-white group-hover:text-neon-purple transition-colors">
                 Choose a Template
               </p>
-              <p className="text-[10px] text-white/50">
+              <p className="text-[10px] sm:text-xs text-white/50">
                 Start with a pre-made character
               </p>
             </div>
+            <svg className="w-5 h-5 text-neon-purple opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
           </button>
         </div>
       )}
@@ -470,236 +488,287 @@ Write the backstory now:`;
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Character Image */}
-        <div className="card border-white/20">
-          <label className="block text-xs sm:text-sm font-bold text-pure-white mb-3 uppercase tracking-wider">
-            Character Image
-          </label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Main Grid Container - Two Columns on Desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
 
-          <div className="flex flex-col items-center gap-4">
-            {imagePreview ? (
-              <div className="relative">
-                <div className="w-48 h-48 rounded-lg overflow-hidden border-2 border-neon-green shadow-lg shadow-neon-green/50">
-                  <img
-                    src={imagePreview}
-                    alt="Character preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setImagePreview(null);
-                    setImageFile(null);
-                  }}
-                  className="absolute top-2 right-2 bg-neon-pink text-pure-black p-2 rounded-lg hover:bg-neon-pink/80 transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <label className="w-full cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <div className="border-2 border-dashed border-white/20 hover:border-neon-green rounded-lg p-12 text-center transition-all duration-300 hover:bg-neon-green/5">
-                  <svg className="w-16 h-16 mx-auto mb-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <p className="text-pure-white font-medium mb-2">Click to upload image</p>
-                  <p className="text-sm text-white/60">PNG, JPG, GIF up to 5MB</p>
-                </div>
+          {/* LEFT COLUMN - Character Visuals & Basic Info */}
+          <div className="space-y-6">
+
+            {/* Character Image */}
+            <div className="card border-neon-green/20 hover:border-neon-green/40 transition-all duration-300">
+              <label className="block text-xs sm:text-sm font-bold text-pure-white mb-3 sm:mb-4 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-5 h-5 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Character Image
               </label>
-            )}
 
-            {!imagePreview && (
-              <div className="w-full">
-                <p className="text-sm text-white/60 mb-2 text-center">Or paste image URL:</p>
+              <div className="flex flex-col items-center gap-4">
+                {imagePreview ? (
+                  <div className="relative group">
+                    <div className="w-64 h-64 rounded-2xl overflow-hidden border-4 border-neon-green/50 shadow-2xl shadow-neon-green/30 ring-4 ring-neon-green/10">
+                      <img
+                        src={imagePreview}
+                        alt="Character preview"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setImageFile(null);
+                      }}
+                      className="absolute -top-3 -right-3 bg-neon-pink text-pure-black p-3 rounded-full hover:bg-neon-pink/90 transition-all shadow-lg hover:scale-110 duration-300"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <label className="w-full cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <div className="border-2 border-dashed border-white/20 hover:border-neon-green/50 rounded-2xl p-16 text-center transition-all duration-300 hover:bg-neon-green/5 group">
+                      <svg className="w-20 h-20 mx-auto mb-4 text-white/40 group-hover:text-neon-green/60 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-pure-white font-bold text-base sm:text-lg mb-2 group-hover:text-neon-green transition-colors">Click to upload image</p>
+                      <p className="text-sm text-white/50">PNG, JPG, GIF up to 5MB</p>
+                    </div>
+                  </label>
+                )}
+
+                {!imagePreview && (
+                  <div className="w-full">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-white/10"></div>
+                      </div>
+                      <div className="relative flex justify-center text-xs">
+                        <span className="px-3 bg-pure-black text-white/40 uppercase tracking-wider font-semibold">Or</span>
+                      </div>
+                    </div>
+                    <input
+                      type="url"
+                      name="imageUrl"
+                      value={formData.imageUrl}
+                      onChange={handleChange}
+                      className="input-field mt-4 text-center"
+                      placeholder="Paste image URL here..."
+                    />
+                  </div>
+                )}
+
+                {errors.image && (
+                  <div className="w-full p-3 bg-neon-pink/10 border border-neon-pink/30 rounded-lg">
+                    <p className="text-sm text-neon-pink font-medium text-center">{errors.image}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Character Name */}
+            <div className="card border-neon-cyan/20 hover:border-neon-cyan/40 transition-all duration-300">
+              <label htmlFor="name" className="block text-xs sm:text-sm font-bold text-pure-white mb-2 sm:mb-3 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-5 h-5 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Character Name
+                <span className="text-neon-pink text-lg">*</span>
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className={`input-field text-base sm:text-lg font-medium ${errors.name ? 'border-neon-pink/50 shadow-lg shadow-neon-pink/30 ring-2 ring-neon-pink/20' : 'focus:border-neon-cyan/50'}`}
+                placeholder="e.g., Elena Blackwood"
+              />
+              {errors.name && (
+                <p className="mt-3 text-sm text-neon-pink font-medium flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.name}
+                </p>
+              )}
+            </div>
+
+            {/* Age and Gender */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="card border-white/10 hover:border-white/20 transition-all duration-300">
+                <label htmlFor="age" className="block text-xs sm:text-sm font-bold text-pure-white mb-2 sm:mb-3 uppercase tracking-wider">
+                  Age
+                </label>
                 <input
-                  type="url"
-                  name="imageUrl"
-                  value={formData.imageUrl}
+                  type="number"
+                  id="age"
+                  name="age"
+                  value={formData.age}
+                  onChange={handleChange}
+                  className={`input-field ${errors.age ? 'border-neon-pink/50 shadow-lg shadow-neon-pink/30' : ''}`}
+                  placeholder="25"
+                  min="0"
+                />
+                {errors.age && (
+                  <p className="mt-2 text-xs text-neon-pink font-medium">{errors.age}</p>
+                )}
+              </div>
+
+              <div className="card border-white/10 hover:border-white/20 transition-all duration-300">
+                <label htmlFor="gender" className="block text-xs sm:text-sm font-bold text-pure-white mb-2 sm:mb-3 uppercase tracking-wider">
+                  Gender
+                </label>
+                <select
+                  id="gender"
+                  name="gender"
+                  value={formData.gender}
                   onChange={handleChange}
                   className="input-field"
-                  placeholder="https://example.com/image.jpg"
-                />
+                >
+                  <option value="">Select...</option>
+                  {GENDER_OPTIONS.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
               </div>
-            )}
-
-            {errors.image && (
-              <p className="text-sm text-neon-pink font-medium">{errors.image}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Character Name */}
-        <div className="card border-white/20">
-          <label htmlFor="name" className="block text-xs sm:text-sm font-bold text-pure-white mb-2 uppercase tracking-wider">
-            Character Name *
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className={`input-field text-sm sm:text-base ${errors.name ? 'border-neon-pink shadow-lg shadow-neon-pink/50' : ''}`}
-            placeholder="e.g., Elena Blackwood"
-          />
-          {errors.name && (
-            <p className="mt-2 text-xs sm:text-sm text-neon-pink font-medium">{errors.name}</p>
-          )}
-        </div>
-
-        {/* Age and Gender */}
-        <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
-          <div className="card border-white/20">
-            <label htmlFor="age" className="block text-xs sm:text-sm font-bold text-pure-white mb-2 uppercase tracking-wider">
-              Age (Optional)
-            </label>
-            <input
-              type="number"
-              id="age"
-              name="age"
-              value={formData.age}
-              onChange={handleChange}
-              className={`input-field text-sm sm:text-base ${errors.age ? 'border-neon-pink shadow-lg shadow-neon-pink/50' : ''}`}
-              placeholder="e.g., 25"
-              min="0"
-            />
-            {errors.age && (
-              <p className="mt-2 text-xs sm:text-sm text-neon-pink font-medium">{errors.age}</p>
-            )}
+            </div>
           </div>
 
-          <div className="card border-white/20">
-            <label htmlFor="gender" className="block text-xs sm:text-sm font-bold text-pure-white mb-2 uppercase tracking-wider">
-              Gender (Optional)
-            </label>
-            <select
-              id="gender"
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              className="input-field text-sm sm:text-base"
-            >
-              <option value="">Select gender</option>
-              {GENDER_OPTIONS.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+          {/* RIGHT COLUMN - Personality & Backstory */}
+          <div className="space-y-6">
 
-        {/* Personality */}
-        <div className="card border-white/20">
-          <label className="block text-xs sm:text-sm font-bold text-pure-white mb-3 uppercase tracking-wider">
-            Personality Type *
-          </label>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-            {PERSONALITY_TYPES.map((type) => (
-              <button
-                key={type.value}
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, personality: type.value }))}
-                className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 text-left ${formData.personality === type.value
-                  ? 'border-neon-green bg-neon-green/10 shadow-lg shadow-neon-green/50'
-                  : 'border-white/10 bg-dark-gray hover:border-white/30'
-                  }`}
-              >
-                <p className="font-bold text-pure-white text-sm sm:text-base mb-0.5 sm:mb-1">{type.label}</p>
-                <p className="text-[10px] sm:text-xs text-white/60">{type.description}</p>
-              </button>
-            ))}
-          </div>
-        </div>
+            {/* Personality */}
+            <div className="card border-neon-purple/20 hover:border-neon-purple/40 transition-all duration-300">
+              <label className="block text-sm sm:text-base font-bold text-pure-white mb-4 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-5 h-5 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Personality Type
+                <span className="text-neon-pink text-lg">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {PERSONALITY_TYPES.map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, personality: type.value }))}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left group ${formData.personality === type.value
+                      ? 'border-neon-purple bg-neon-purple/20 shadow-lg shadow-neon-purple/30 scale-105'
+                      : 'border-white/10 bg-dark-gray/50 hover:border-neon-purple/30 hover:bg-dark-gray/80'
+                      }`}
+                  >
+                    <p className={`font-bold text-xs sm:text-sm mb-0.5 sm:mb-1 ${formData.personality === type.value ? 'text-neon-purple' : 'text-pure-white'}`}>
+                      {type.label}
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-white/50">{type.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {/* Backstory */}
-        <div className="card border-white/20 relative">
-          <div className="flex items-start justify-between gap-3 mb-2">
-            <label htmlFor="backstory" className="block text-xs sm:text-sm font-bold text-pure-white uppercase tracking-wider">
-              Backstory *
-            </label>
-            <button
-              type="button"
-              onClick={generateBackstory}
-              disabled={generatingBackstory}
-              className="group relative flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-neon-cyan/10 to-neon-purple/10 hover:from-neon-cyan/20 hover:to-neon-purple/20 border border-neon-cyan/30 hover:border-neon-cyan/50 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Generate AI backstory"
-            >
-              {generatingBackstory ? (
-                <>
-                  <svg className="animate-spin h-4 w-4 text-neon-cyan" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            {/* Backstory */}
+            <div className="card border-neon-yellow/20 hover:border-neon-yellow/40 transition-all duration-300">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <label htmlFor="backstory" className="block text-xs sm:text-sm font-bold text-pure-white uppercase tracking-wider flex items-center gap-2">
+                  <svg className="w-5 h-5 text-neon-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
-                  <span className="text-xs font-semibold text-neon-cyan">Generating...</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-lg">✨</span>
-                  <span className="text-xs font-semibold text-neon-cyan">AI Generate</span>
-                </>
+                  Backstory
+                  <span className="text-neon-pink text-base sm:text-lg">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={generateBackstory}
+                  disabled={generatingBackstory}
+                  className="group relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-neon-cyan/20 to-neon-purple/20 hover:from-neon-cyan/30 hover:to-neon-purple/30 border-2 border-neon-cyan/40 hover:border-neon-cyan/60 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 hover:shadow-lg hover:shadow-neon-cyan/30"
+                  title="Generate AI backstory"
+                >
+                  {generatingBackstory ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-neon-cyan" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span className="text-xs font-bold text-neon-cyan">Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-lg">✨</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-pure-white group-hover:text-neon-cyan transition-colors">AI Generate</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <textarea
+                id="backstory"
+                name="backstory"
+                value={formData.backstory}
+                onChange={handleChange}
+                rows={12}
+                className={`input-field resize-none text-sm leading-relaxed ${errors.backstory ? 'border-neon-pink/50 shadow-lg shadow-neon-pink/30 ring-2 ring-neon-pink/20' : 'focus:border-neon-yellow/50'}`}
+                placeholder="Write a detailed backstory for your character... Who are they? What's their history? What motivates them? What are their dreams and fears?"
+              />
+              {errors.backstory && (
+                <p className="mt-3 text-sm text-neon-pink font-medium flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.backstory}
+                </p>
               )}
-
-              {/* Tooltip */}
-              {!generatingBackstory && (
-                <div className="absolute right-0 top-full mt-2 w-48 px-3 py-2 bg-dark-gray border border-neon-cyan/30 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 shadow-lg shadow-neon-cyan/20">
-                  <p className="text-xs text-white/80 leading-relaxed">
-                    Save time! Let AI create a detailed backstory based on your character's info
-                  </p>
+              <div className="mt-3 flex items-center justify-between">
+                <p className="text-xs text-white/40 font-mono">
+                  {formData.backstory.length} / 50 minimum
+                </p>
+                <div className={`text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full ${formData.backstory.length >= 50 ? 'bg-neon-green/20 text-neon-green' : 'bg-white/5 text-white/40'
+                  }`}>
+                  {formData.backstory.length >= 50 ? '✓ Complete' : 'In Progress'}
                 </div>
-              )}
-            </button>
+              </div>
+            </div>
           </div>
-          <textarea
-            id="backstory"
-            name="backstory"
-            value={formData.backstory}
-            onChange={handleChange}
-            rows={7}
-            className={`input-field resize-none text-sm sm:text-base leading-relaxed ${errors.backstory ? 'border-neon-pink shadow-lg shadow-neon-pink/50' : ''}`}
-            placeholder="Write a detailed backstory for your character... Who are they? What's their history? What motivates them?"
-          />
-          {errors.backstory && (
-            <p className="mt-2 text-xs sm:text-sm text-neon-pink font-medium">{errors.backstory}</p>
-          )}
-          <p className="mt-2 text-[10px] sm:text-xs text-white/40 font-mono">
-            {formData.backstory.length} / 50 minimum characters
-          </p>
         </div>
 
         {/* Error Message */}
         {errors.submit && (
           <div className="card border-neon-pink/50 bg-neon-pink/10">
-            <p className="text-xs sm:text-sm text-neon-pink font-medium">{errors.submit}</p>
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-neon-pink flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <p className="text-sm text-neon-pink font-medium">{errors.submit}</p>
+            </div>
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 pt-4 border-t border-white/10">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="btn-outline sm:w-auto"
+            className="btn-outline sm:w-auto group"
             disabled={loading}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
-            Cancel
+            <span>Cancel</span>
           </button>
           <button
             type="submit"
-            className="btn-primary sm:w-auto"
+            className="btn-primary sm:w-auto group relative overflow-hidden"
             disabled={loading || (!isEditMode && characterCount >= 5)}
           >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
             {loading ? (
               <>
                 <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">

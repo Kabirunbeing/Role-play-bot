@@ -39,7 +39,7 @@ export const CHARACTER_TEMPLATES = [
         id: 'template_5',
         name: 'Lyra Moonshadow',
         personality: 'friendly',
-        age: '120',
+        age: '20',
         gender: 'Female',
         backstory: 'As a guardian of the Whispering Woods, Lyra has lived in harmony with nature for decades. She possesses a gentle spirit and a deep connection to the flora and fauna of her home. However, a encroaching darkness has forced her to leave her sanctuary and seek allies. She brings the healing power of nature and a calming presence to any group, always seeking peaceful solutions before resorting to violence.',
         imageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1888&auto=format&fit=crop'
@@ -75,7 +75,7 @@ export const CHARACTER_TEMPLATES = [
         id: 'template_9',
         name: 'Seraphina Blackwood',
         personality: 'mysterious',
-        age: '200',
+        age: '20',
         gender: 'Female',
         backstory: 'Seraphina moves through the night like a shadow, her motives as opaque as her past. Cursed with immortality, she has walked the earth for centuries, observing humanity from a distance. She is elegant, sophisticated, and deadly. While she often plays the role of a villain in the stories of others, she follows her own moral compass. She seeks a way to break her curse and finally find peace.',
         imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=1887&auto=format&fit=crop'

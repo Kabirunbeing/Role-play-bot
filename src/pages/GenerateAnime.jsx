@@ -256,89 +256,113 @@ export default function GenerateAnime() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto fade-in">
-            <div className="text-center mb-10">
-                <h1 className="text-4xl md:text-5xl font-display font-bold text-pure-white mb-4">
-                    Authentic Anime <span className="text-neon-pink">Character Generator</span>
+        <div className="max-w-6xl mx-auto px-4 py-6 fade-in">
+            {/* Header Section */}
+            <div className="text-center mb-8 sm:mb-12">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-pure-white mb-3 sm:mb-4 tracking-tight">
+                    Authentic Anime{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-pink via-neon-purple to-neon-pink">
+                        Character Generator
+                    </span>
                 </h1>
-                <p className="text-white/60 text-lg mb-2">
-                    Enter a name to generate an <strong>authentic</strong> anime character with real images and canon details.
+                <p className="text-white/60 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-4 sm:mb-6">
+                    Enter a name to generate an <strong className="text-white/90">authentic</strong> anime character with real images and canon details.
                 </p>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-neon-pink">
-                    <span>⚡ Credits: {rateLimit.remaining}/7</span>
-                    {rateLimit.remaining < 7 && (
-                        <span className="text-white/40">
-                            (Resets in {Math.ceil((rateLimit.resetTime - Date.now()) / (1000 * 60 * 60))}h)
+
+                {/* Credits Counter */}
+                <div className="inline-flex items-center gap-3 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-neon-pink/10 via-neon-purple/10 to-neon-pink/10 border border-neon-pink/30 backdrop-blur-sm">
+                    <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-neon-pink animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+                        </svg>
+                        <span className="text-white/70 text-xs sm:text-sm font-semibold uppercase tracking-wide">Credits</span>
+                    </div>
+                    <div className="h-5 w-px bg-white/20"></div>
+                    <div className="flex items-center gap-2">
+                        <span className={`text-base sm:text-lg font-bold ${rateLimit.remaining <= 2 ? 'text-red-400' : 'text-neon-pink'}`}>
+                            {rateLimit.remaining} / 7
                         </span>
-                    )}
+                        {rateLimit.remaining < 7 && (
+                            <span className="text-[10px] sm:text-xs text-white/30 font-mono">
+                                (↻ {Math.ceil((rateLimit.resetTime - Date.now()) / (1000 * 60 * 60))}h)
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                 {/* Controls */}
-                <div className="lg:col-span-1 space-y-6">
-                    <div className="card border-neon-pink/30">
-                        <h2 className="text-xl font-bold text-pure-white mb-4 flex items-center gap-2">
-                            <span className="text-neon-pink">⚙️</span> Settings
+                <div className="lg:col-span-1">
+                    <div className="card border-neon-pink/30 hover:border-neon-pink/50 transition-all duration-300">
+                        <h2 className="text-lg sm:text-xl font-bold text-pure-white mb-5 sm:mb-6 flex items-center gap-2">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                            </svg>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-neon-pink">Settings</span>
                         </h2>
 
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             <div>
-                                <label className="block text-xs font-bold text-white/70 uppercase mb-2">Character Name <span className="text-neon-pink">*</span></label>
+                                <label className="block text-xs sm:text-sm font-bold text-white/80 uppercase mb-2 tracking-wider">
+                                    Character Name <span className="text-neon-pink">*</span>
+                                </label>
                                 <input
                                     type="text"
                                     value={options.name}
                                     onChange={(e) => setOptions({ ...options, name: e.target.value })}
                                     placeholder="e.g. Naruto Uzumaki"
-                                    className="input-field text-sm"
+                                    className="input-field text-sm sm:text-base focus:border-neon-pink/50"
                                 />
-                                <p className="text-[10px] text-white/40 mt-1">
+                                <p className="text-[10px] sm:text-xs text-white/40 mt-1.5 leading-relaxed">
                                     Enter a known character name to fetch their real image and details.
                                 </p>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-white/70 uppercase mb-2">Anime Name (Optional)</label>
+                                <label className="block text-xs sm:text-sm font-bold text-white/80 uppercase mb-2 tracking-wider">Anime Name (Optional)</label>
                                 <input
                                     type="text"
                                     value={options.animeName}
                                     onChange={(e) => setOptions({ ...options, animeName: e.target.value })}
                                     placeholder="e.g. Naruto Shippuden"
-                                    className="input-field text-sm"
+                                    className="input-field text-sm sm:text-base focus:border-neon-purple/50"
                                 />
-                                <p className="text-[10px] text-white/40 mt-1">
+                                <p className="text-[10px] sm:text-xs text-white/40 mt-1.5 leading-relaxed">
                                     Specify the anime to ensure we find the right character.
                                 </p>
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-bold text-white/70 uppercase mb-2">Genre</label>
-                                <select
-                                    value={options.genre}
-                                    onChange={(e) => setOptions({ ...options, genre: e.target.value })}
-                                    className="input-field text-sm"
-                                >
-                                    {ANIME_GENRES.map(g => <option key={g} value={g}>{g}</option>)}
-                                </select>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs sm:text-sm font-bold text-white/80 uppercase mb-2 tracking-wider">Genre</label>
+                                    <select
+                                        value={options.genre}
+                                        onChange={(e) => setOptions({ ...options, genre: e.target.value })}
+                                        className="input-field text-xs sm:text-sm"
+                                    >
+                                        {ANIME_GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs sm:text-sm font-bold text-white/80 uppercase mb-2 tracking-wider">Archetype</label>
+                                    <select
+                                        value={options.archetype}
+                                        onChange={(e) => setOptions({ ...options, archetype: e.target.value })}
+                                        className="input-field text-xs sm:text-sm"
+                                    >
+                                        {ARCHETYPES.map(a => <option key={a} value={a}>{a}</option>)}
+                                    </select>
+                                </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-white/70 uppercase mb-2">Archetype</label>
-                                <select
-                                    value={options.archetype}
-                                    onChange={(e) => setOptions({ ...options, archetype: e.target.value })}
-                                    className="input-field text-sm"
-                                >
-                                    {ARCHETYPES.map(a => <option key={a} value={a}>{a}</option>)}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-white/70 uppercase mb-2">Gender</label>
+                                <label className="block text-xs sm:text-sm font-bold text-white/80 uppercase mb-2 tracking-wider">Gender</label>
                                 <select
                                     value={options.gender}
                                     onChange={(e) => setOptions({ ...options, gender: e.target.value })}
-                                    className="input-field text-sm"
+                                    className="input-field text-sm sm:text-base"
                                 >
                                     <option value="Random">Random</option>
                                     <option value="Male">Male</option>
@@ -351,20 +375,22 @@ export default function GenerateAnime() {
 
                             <button
                                 onClick={generateCharacter}
-                                disabled={loading}
-                                className="w-full btn-primary bg-neon-pink hover:bg-neon-pink/90 shadow-neon-pink/20"
+                                disabled={loading || rateLimit.remaining <= 0}
+                                className="w-full btn-primary group relative overflow-hidden bg-gradient-to-r from-neon-pink via-neon-purple to-neon-pink hover:shadow-2xl hover:shadow-neon-pink/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
                                 {loading ? (
                                     <>
                                         <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                         </svg>
-                                        Generating...
+                                        <span className="text-sm sm:text-base">Generating...</span>
                                     </>
                                 ) : (
                                     <>
-                                        <span className="text-xl">✨</span> Generate
+                                        <span className="text-lg sm:text-xl">✨</span>
+                                        <span className="text-sm sm:text-base font-bold">Generate Character</span>
                                     </>
                                 )}
                             </button>
@@ -375,27 +401,33 @@ export default function GenerateAnime() {
                 {/* Result Display */}
                 <div className="lg:col-span-2">
                     {error && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl mb-6 text-red-400 text-sm">
-                            {error}
+                        <div className="p-4 sm:p-5 bg-red-500/10 border-2 border-red-500/30 rounded-xl mb-6 flex items-start gap-3">
+                            <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <p className="text-red-400 text-sm sm:text-base font-medium">{error}</p>
                         </div>
                     )}
 
                     {!generatedCharacter && !loading && (
-                        <div className="h-full min-h-[400px] card border-dashed border-white/10 flex flex-col items-center justify-center text-center p-8">
-                            <div className="w-20 h-20 bg-dark-gray rounded-full flex items-center justify-center mb-4 text-4xl opacity-50">
+                        <div className="h-full min-h-[450px] sm:min-h-[500px] card border-dashed border-white/10 flex flex-col items-center justify-center text-center p-8 sm:p-12 hover:border-white/20 transition-all duration-300">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-neon-pink/20 to-neon-purple/20 rounded-full flex items-center justify-center mb-5 sm:mb-6 text-4xl sm:text-5xl opacity-60">
                                 🎌
                             </div>
-                            <h3 className="text-xl font-bold text-white/40">Ready to Create</h3>
-                            <p className="text-white/30 max-w-xs mt-2">
-                                Select your preferences and hit generate to create a unique anime character.
+                            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white/50 mb-2">Ready to Create</h3>
+                            <p className="text-sm sm:text-base text-white/30 max-w-sm mx-auto leading-relaxed">
+                                Configure your settings and hit generate to create a unique anime character.
                             </p>
                         </div>
                     )}
 
                     {loading && !generatedCharacter && (
-                        <div className="h-full min-h-[400px] card flex flex-col items-center justify-center">
-                            <div className="w-16 h-16 border-4 border-neon-pink border-t-transparent rounded-full animate-spin mb-4"></div>
-                            <p className="text-neon-pink animate-pulse">Dreaming up a character...</p>
+                        <div className="h-full min-h-[450px] sm:min-h-[500px] card flex flex-col items-center justify-center bg-gradient-to-br from-neon-pink/5 via-neon-purple/5 to-neon-pink/5">
+                            <div className="relative mb-6">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-neon-pink/30 border-t-neon-pink rounded-full animate-spin"></div>
+                            </div>
+                            <p className="text-neon-pink text-base sm:text-lg font-semibold animate-pulse mb-2">Dreaming up a character...</p>
+                            <p className="text-white/40 text-xs sm:text-sm">This may take a few moments</p>
                         </div>
                     )}
 
