@@ -12,6 +12,8 @@ import CharacterList from './pages/CharacterList';
 import Chat from './pages/Chat';
 import CharacterProfile from './pages/CharacterProfile';
 import GenerateAnime from './pages/GenerateAnime';
+import Gallery from './pages/Gallery';
+import Badges from './pages/Badges';
 
 function App() {
   return (
@@ -43,6 +45,16 @@ function App() {
           <Route path="/generate-anime" element={
             <ProtectedRoute>
               <Layout><GenerateAnime /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/gallery" element={
+            <ProtectedRoute>
+              <Layout><Gallery /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/badges" element={
+            <ProtectedRoute>
+              <Layout><Badges /></Layout>
             </ProtectedRoute>
           } />
           <Route path="/characters" element={

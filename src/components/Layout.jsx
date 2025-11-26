@@ -13,6 +13,8 @@ export default function Layout({ children }) {
     { path: '/', label: 'Home' },
     { path: '/create', label: 'Create' },
     { path: '/generate-anime', label: 'Anime Gen' },
+    { path: '/gallery', label: 'Gallery' },
+    { path: '/badges', label: 'Badges' },
     { path: '/characters', label: 'Characters' },
   ];
 

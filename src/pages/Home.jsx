@@ -1,9 +1,43 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
+import { supabase } from '../lib/supabase';
 import StatsCard from '../components/StatsCard';
 
 export default function Home() {
   const characters = useStore((state) => state.characters);
+  const [publicCharacters, setPublicCharacters] = useState([]);
+  const [loadingGallery, setLoadingGallery] = useState(true);
+
+  useEffect(() => {
+    loadPublicCharacters();
+  }, []);
+
+  const loadPublicCharacters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('characters')
+        .select('*')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+        .limit(8); // Show only 8 characters on homepage
+
+      if (error) throw error;
+      setPublicCharacters(data || []);
+    } catch (error) {
+      console.error('Error loading public characters:', error);
+    } finally {
+      setLoadingGallery(false);
+    }
+  };
+
+  const PERSONALITY_COLORS = {
+    friendly: 'neon-green',
+    sarcastic: 'neon-yellow',
+    wise: 'neon-cyan',
+    dark: 'neon-purple',
+    cheerful: 'neon-pink',
+  };
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] flex flex-col">
@@ -126,7 +160,83 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* Community Gallery Section */}
+        {!loadingGallery && publicCharacters.length > 0 && (
+          <div className="mt-20 w-full max-w-6xl animate-fade-in-up">
+            {/* Section Header */}
+            <div className="text-center mb-10">
+              <div className="inline-block mb-3 px-4 py-1.5 rounded-full bg-neon-pink/10 border border-neon-pink/20 backdrop-blur-md">
+                <span className="text-neon-pink text-sm font-bold tracking-wider uppercase">Community Creations</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-pure-white mb-4">
+                Explore the <span className="text-neon-pink">Gallery</span>
+              </h2>
+              <p className="text-base sm:text-lg text-white/70 max-w-2xl mx-auto mb-2">
+                Discover amazing characters created by our talented community of users.
+              </p>
+              <p className="text-sm text-white/50">
+                These characters were made by people just like you using RolePlayForge! ✨
+              </p>
+            </div>
+
+            {/* Characters Grid Preview */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+              {publicCharacters.map((character, index) => (
+                <Link
+                  key={character.id}
+                  to={`/chat/${character.id}`}
+                  className="group relative bg-gradient-to-br from-dark-gray/50 via-dark-gray/50 to-off-black/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden hover:border-neon-pink/50 transition-all duration-300 hover:-translate-y-1"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  {/* Character Image */}
+                  <div className="relative h-40 sm:h-48 overflow-hidden">
+                    {character.image_url ? (
+                      <img
+                        src={character.image_url}
+                        alt={character.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className={`w-full h-full bg-gradient-to-br from-${PERSONALITY_COLORS[character.personality]}/20 to-${PERSONALITY_COLORS[character.personality]}/30 flex items-center justify-center text-4xl font-bold text-${PERSONALITY_COLORS[character.personality]}`}>
+                        {character.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+
+                  {/* Character Info */}
+                  <div className="p-3">
+                    <h3 className="text-sm font-bold text-pure-white group-hover:text-neon-pink transition-colors line-clamp-1 mb-1">
+                      {character.name}
+                    </h3>
+                    <span className={`inline-block px-2 py-0.5 rounded-md bg-${PERSONALITY_COLORS[character.personality]}/10 border border-${PERSONALITY_COLORS[character.personality]}/20 text-${PERSONALITY_COLORS[character.personality]} text-xs font-medium`}>
+                      {character.personality}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* View All Button */}
+            <div className="text-center">
+              <Link
+                to="/gallery"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-neon-pink/20 to-neon-purple/20 border border-neon-pink/30 text-neon-pink font-bold text-lg rounded-xl transition-all duration-300 hover:from-neon-pink/30 hover:to-neon-purple/30 hover:border-neon-pink/50 hover:scale-105 hover:shadow-[0_0_30px_rgba(255,0,110,0.3)]"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                View Full Gallery
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
