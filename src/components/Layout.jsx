@@ -65,27 +65,36 @@ export default function Layout({ children }) {
                 <div className="hidden lg:flex items-center space-x-2 xl:space-x-3">
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-dark-gray border border-white/10 rounded-lg">
                     <div className="w-2 h-2 bg-neon-green rounded-full"></div>
-                    <span className="text-xs xl:text-sm text-white/80 max-w-[120px] xl:max-w-none truncate font-medium">{user.email}</span>
+                    <span className="text-xs xl:text-sm text-white/80 max-w-[120px] xl:max-w-none truncate font-medium">{user.user_metadata?.name || user.email}</span>
+                    {user.is_anonymous && (
+                      <div className="flex items-center gap-1 ml-2 px-2 py-0.5 bg-gradient-to-r from-neon-cyan/10 to-neon-blue/10 border border-neon-cyan/20 rounded-md">
+                        <svg className="w-3 h-3 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-[10px] text-neon-cyan font-semibold uppercase tracking-wider">Guest</span>
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={handleSignOut}
                     disabled={isLoggingOut}
-                    className="px-4 py-2 rounded-lg text-sm font-medium bg-transparent border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="group relative px-5 py-2 rounded-xl bg-white/5 border border-white/10 hover:border-red-500/50 text-white/70 hover:text-red-400 font-bold text-sm transition-all duration-300 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 overflow-hidden"
                   >
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     {isLoggingOut ? (
                       <>
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <svg className="animate-spin h-4 w-4 relative z-10" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        <span>Logging out...</span>
+                        <span className="relative z-10">Exiting...</span>
                       </>
                     ) : (
                       <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span className="relative z-10 group-hover:-translate-x-0.5 transition-transform duration-300">Logout</span>
+                        <svg className="w-4 h-4 relative z-10 group-hover:translate-x-0.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                        <span>Logout</span>
                       </>
                     )}
                   </button>
@@ -118,49 +127,80 @@ export default function Layout({ children }) {
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
-            <nav className="lg:hidden pb-4 pt-2 space-y-2 fade-in">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block px-4 py-3 rounded-lg text-sm font-medium uppercase tracking-wide transition-all duration-300 ${location.pathname === link.path
-                    ? 'bg-neon-green text-pure-black font-bold shadow-neon-green'
-                    : 'text-pure-white hover:bg-white/5 hover:text-neon-green'
-                    }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <nav className="lg:hidden pb-6 pt-3 space-y-3 fade-in animate-fade-in-up">
+              {/* Navigation Links */}
+              <div className="space-y-1.5">
+                {navLinks.map((link, index) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`group flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold uppercase tracking-wide transition-all duration-300 ${location.pathname === link.path
+                        ? 'bg-gradient-to-r from-neon-green to-neon-cyan text-pure-black shadow-lg shadow-neon-green/20'
+                        : 'text-white/80 hover:bg-white/5 hover:text-neon-green border border-transparent hover:border-white/10'
+                      }`}
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <span>{link.label}</span>
+                    {location.pathname === link.path && (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
+                  </Link>
+                ))}
+              </div>
+
               {/* Mobile User Menu */}
               {user && (
-                <div className="pt-4 border-t border-white/10 space-y-3">
-                  <div className="px-4 py-2 bg-dark-gray border border-white/10 rounded-lg flex items-center gap-2">
-                    <div className="w-2 h-2 bg-neon-green rounded-full"></div>
-                    <span className="text-sm text-white/80 font-medium truncate">{user.email}</span>
+                <div className="pt-3 border-t border-white/10 space-y-3">
+                  {/* User Info Card */}
+                  <div className="px-4 py-3 bg-gradient-to-br from-dark-gray to-dark-gray/50 border border-white/10 rounded-xl backdrop-blur-sm">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neon-green to-neon-cyan flex items-center justify-center shadow-lg shadow-neon-green/20">
+                        <svg className="w-5 h-5 text-pure-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-white/50 font-medium uppercase tracking-wider mb-0.5">Signed in as</p>
+                        <p className="text-sm text-white font-semibold truncate">{user.user_metadata?.name || user.email}</p>
+                      </div>
+                    </div>
+                    {user.is_anonymous && (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-neon-cyan/10 to-neon-blue/10 border border-neon-cyan/20 rounded-lg">
+                        <svg className="w-3.5 h-3.5 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-xs text-neon-cyan font-semibold uppercase tracking-wide">Guest Session</span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Logout Button */}
                   <button
                     onClick={() => {
                       handleSignOut();
                       setMobileMenuOpen(false);
                     }}
                     disabled={isLoggingOut}
-                    className="w-full px-4 py-3 rounded-lg text-sm font-medium bg-transparent border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full group relative px-5 py-3.5 rounded-xl bg-white/5 border border-white/10 hover:border-red-500/50 text-white/70 hover:text-red-400 font-bold text-sm transition-all duration-300 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 overflow-hidden"
                   >
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     {isLoggingOut ? (
                       <>
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <svg className="animate-spin h-4 w-4 relative z-10" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        <span>Logging out...</span>
+                        <span className="relative z-10">Exiting...</span>
                       </>
                     ) : (
                       <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span className="relative z-10 group-hover:-translate-x-0.5 transition-transform duration-300">Logout</span>
+                        <svg className="w-4 h-4 relative z-10 group-hover:translate-x-0.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                        <span>Logout</span>
                       </>
                     )}
                   </button>

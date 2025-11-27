@@ -50,6 +50,11 @@ export const AuthProvider = ({ children }) => {
     return { data, error }
   }
 
+  const signInAnonymously = async () => {
+    const { data, error } = await supabase.auth.signInAnonymously()
+    return { data, error }
+  }
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     return { error }
@@ -74,6 +79,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     signUp,
     signIn,
+    signInAnonymously,
     signOut,
     resetPassword,
     updatePassword,

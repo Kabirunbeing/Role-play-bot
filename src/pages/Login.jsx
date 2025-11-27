@@ -8,7 +8,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signIn } = useAuth()
+  const { signIn, signInAnonymously } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -39,6 +39,21 @@ export default function Login() {
       })
 
       if (error) throw error
+    } catch (error) {
+      setError(error.message)
+      setLoading(false)
+    }
+  }
+
+  const handleGuestLogin = async () => {
+    try {
+      setError('')
+      setLoading(true)
+
+      const { error } = await signInAnonymously()
+
+      if (error) throw error
+      navigate('/')
     } catch (error) {
       setError(error.message)
       setLoading(false)
@@ -96,7 +111,7 @@ export default function Login() {
             onClick={handleGoogleLogin}
             disabled={loading}
             type="button"
-            className="w-full mb-4 sm:mb-6 flex items-center justify-center gap-3 bg-white hover:bg-white/90 text-gray-900 font-bold py-3 sm:py-3.5 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 hover:shadow-lg text-sm sm:text-base"
+            className="w-full mb-4 flex items-center justify-center gap-3 bg-white hover:bg-white/90 text-gray-900 font-bold py-3 sm:py-3.5 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 hover:shadow-lg text-sm sm:text-base"
           >
             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -105,6 +120,19 @@ export default function Login() {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
             <span>Continue with Google</span>
+          </button>
+
+          {/* Guest Sign In Button */}
+          <button
+            onClick={handleGuestLogin}
+            disabled={loading}
+            type="button"
+            className="w-full mb-4 sm:mb-6 flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 text-white font-bold py-3 sm:py-3.5 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 hover:shadow-lg text-sm sm:text-base border border-white/10 backdrop-blur-md"
+          >
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span>Continue as Guest</span>
           </button>
 
           {/* Divider */}
